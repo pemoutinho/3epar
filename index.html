@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0B1A3E">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>3ÉPAR — Baralho</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap');
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --gold:#D4AF37;--gold-l:#F0D060;--gold-d:#A88820;
+      --cream:#F5EDD8;--ink:#1C0E00;
+      --panel:#111827;--panel2:#1F2937;--panel3:#374151;
+      --txt:#F9FAFB;--txt2:#9CA3AF;--danger:#EF4444;--success:#10B981;
+    }
+    html,body{height:100%;font-family:'Lato',sans-serif;background:#06091A;overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+    body{display:flex;justify-content:center;min-height:100dvh}
+    #app{width:100%;max-width:430px;min-height:100dvh;display:flex;flex-direction:column;position:relative;overflow:hidden}
+    .screen{display:none;flex:1;flex-direction:column}
+    .screen.active{display:flex}
+
+    .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+    .field label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(212,175,55,0.6)}
+    .field input,.field select,.field textarea{padding:12px 14px;border-radius:8px;border:1px solid rgba(212,175,55,0.25);background:rgba(255,255,255,0.05);color:var(--txt);font-size:14px;font-family:'Lato',sans-serif;outline:none;transition:border-color .2s}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(212,175,55,0.6)}
+    .field select option{background:#1a1a2e;color:#fff}
+    .field textarea{resize:vertical;min-height:80px}
+    .err-msg{color:#F87171;font-size:12px;text-align:center;min-height:16px}
+
+    .btn{padding:13px 18px;border-radius:8px;border:none;cursor:pointer;font-family:'Lato',sans-serif;font-size:14px;font-weight:700;transition:transform .14s,opacity .14s;min-height:46px}
+    .btn:active{transform:scale(.97)}
+    .btn-gold{background:linear-gradient(135deg,var(--gold-d),var(--gold));color:#1a0a00}
+    .btn-outline{background:transparent;border:1px solid rgba(212,175,55,0.35);color:var(--gold)}
+    .btn-outline:hover{background:rgba(212,175,55,.08)}
+    .btn-danger{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#F87171}
+    .btn-success{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:#6EE7B7}
+    .btn-sm{padding:7px 12px;font-size:12px;min-height:34px}
+    .btn-full{width:100%}
+    .hr-gold{height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.4;margin:14px 0}
+
+    /* ── LOGIN ── */
+    #screen-login{background:#0B1A3E;align-items:center;justify-content:center;padding:32px 24px}
+    .login-box{width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center}
+    .login-box .logo-svg{width:min(72vw,280px);margin-bottom:12px;height:auto}
+    .logo-wordmark{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;letter-spacing:5px;color:var(--gold)}
+    .logo-tagline{font-size:clamp(13px,3.8vw,17px);letter-spacing:4px;text-transform:uppercase;color:rgba(212,175,55,.85);font-weight:700;margin-top:6px}
+    .login-form{width:100%;margin-top:4px}
+
+    /* ── MENU ── */
+    #screen-menu{background:#0B1A3E;padding:20px 16px;overflow-y:auto}
+    .menu-topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+    .user-pill{display:flex;align-items:center;gap:7px}
+    .user-avatar{width:30px;height:30px;border-radius:50%;background:rgba(212,175,55,.15);border:1px solid rgba(212,175,55,.3);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--gold)}
+    .user-name{font-size:12px;color:rgba(212,175,55,.7);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .user-type{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(212,175,55,.4)}
+    .topbar-btns{display:flex;gap:6px}
+    .icon-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:rgba(255,255,255,.5);padding:6px 10px;font-size:12px;cursor:pointer;transition:background .15s}
+    .icon-btn:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.8)}
+    .logo-block{display:flex;flex-direction:column;align-items:center;gap:5px;margin-bottom:6px}
+    .logo-block .logo-svg{width:min(68vw,260px);height:auto}
+    .logo-block .logo-wordmark{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;letter-spacing:5px;color:var(--gold)}
+    .logo-block .logo-tagline{font-size:clamp(12px,3.5vw,16px);letter-spacing:4px;text-transform:uppercase;color:rgba(212,175,55,.85);font-weight:700}
+    .menu-sub{text-align:center;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:rgba(212,175,55,.45);margin-bottom:12px}
+    .level-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+    .lvl-btn{border:1px solid rgba(212,175,55,.3);border-radius:12px;padding:16px 6px 14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;transition:transform .14s;position:relative;overflow:hidden}
+    .lvl-btn:hover{transform:translateY(-3px)}.lvl-btn:active{transform:scale(.96)}
+    .lvl-btn.l1{background:linear-gradient(155deg,#091633,#122A5E);box-shadow:0 4px 18px rgba(10,30,90,.55)}
+    .lvl-btn.l2{background:linear-gradient(155deg,#071A0D,#0E3018);box-shadow:0 4px 18px rgba(10,50,20,.55)}
+    .lvl-btn.l3{background:linear-gradient(155deg,#1E0800,#3C1000);box-shadow:0 4px 18px rgba(60,20,0,.55)}
+    .lvl-btn.locked{opacity:.45;filter:grayscale(.6);cursor:not-allowed}
+    .lvl-btn.locked:hover{transform:none}
+    .lock-icon{position:absolute;top:8px;right:8px;font-size:12px;opacity:.7}
+    .lvl-flames{font-size:15px;letter-spacing:-3px;line-height:1}
+    .lvl-num{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(212,175,55,.55)}
+    .lvl-title{font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:var(--gold);line-height:1.2;text-align:center}
+    .lvl-count{font-size:9px;color:rgba(212,175,55,.35)}
+    .all-btn{width:100%;padding:14px;background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.3);border-radius:10px;color:var(--gold);font-family:'Playfair Display',serif;font-size:15px;font-style:italic;cursor:pointer;transition:background .2s;margin-bottom:10px}
+    .all-btn:hover{background:rgba(212,175,55,.16)}
+    .joker-btn{width:100%;padding:11px;background:rgba(212,175,55,.04);border:1px solid rgba(212,175,55,.18);border-radius:10px;color:rgba(212,175,55,.55);font-size:12px;cursor:pointer;transition:background .2s;margin-bottom:10px}
+    .joker-btn:hover{background:rgba(212,175,55,.1)}
+    .my-cards-btn{width:100%;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:rgba(255,255,255,.45);font-size:12px;cursor:pointer;transition:background .2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px}
+    .my-cards-btn:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.7)}
+    .packs-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(212,175,55,.35);margin-bottom:8px;text-align:center}
+    .pack-btn{width:100%;padding:12px 14px;background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.22);border-radius:10px;color:rgba(212,175,55,.7);font-size:13px;cursor:pointer;transition:background .2s;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .pack-btn:hover{background:rgba(212,175,55,.14)}
+    .pack-badge{font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:3px 8px;border-radius:10px;background:rgba(212,175,55,.15);color:var(--gold)}
+
+    /* ── PLAYER SETUP ── */
+    #screen-players{background:#0B1A3E;padding:0;overflow-y:auto}
+    .ps-header{display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(0,0,0,.25);border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
+    .ps-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--gold);flex:1}
+    .ps-body{padding:16px;display:flex;flex-direction:column;gap:12px;flex:1}
+    .ps-add-row{display:flex;gap:8px}
+    .ps-add-row input{flex:1;padding:11px 14px;border-radius:8px;border:1px solid rgba(212,175,55,.25);background:rgba(255,255,255,.05);color:var(--txt);font-size:14px;outline:none}
+    .ps-add-row input:focus{border-color:rgba(212,175,55,.6)}
+    .players-list{display:flex;flex-direction:column;gap:8px}
+    .player-item{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 12px}
+    .player-item.sortear-winner{background:rgba(212,175,55,.12);border-color:rgba(212,175,55,.4)}
+    .player-avatar{width:32px;height:32px;border-radius:50%;background:rgba(212,175,55,.15);border:1px solid rgba(212,175,55,.3);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--gold);flex-shrink:0}
+    .player-name-txt{flex:1;color:var(--txt);font-size:14px}
+    .player-crown{font-size:16px}
+    .sortear-result{text-align:center;padding:12px;background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.25);border-radius:10px;font-family:'Playfair Display',serif;font-size:15px;color:var(--gold);font-style:italic}
+    .share-link-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--txt2);word-break:break-all;line-height:1.5}
+    .ps-footer{padding:14px 16px;display:flex;flex-direction:column;gap:10px;flex-shrink:0;border-top:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.15)}
+    #ps-start-btn:disabled,#ps-sortear-btn:disabled{opacity:.35;cursor:not-allowed;transform:none !important}
+
+    /* ── GUEST JOIN ── */
+    #screen-guest{background:#0B1A3E;align-items:center;justify-content:center;padding:32px 20px}
+    .guest-box{width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:12px}
+    .guest-title{font-family:'Playfair Display',serif;font-size:20px;color:var(--gold);text-align:center}
+    .guest-sub{font-size:13px;color:var(--txt2);text-align:center;line-height:1.6}
+    .guest-players{width:100%;display:flex;flex-direction:column;gap:8px;margin-top:4px}
+    .guest-player-btn{width:100%;padding:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:var(--txt);font-size:15px;cursor:pointer;transition:background .15s;text-align:center}
+    .guest-player-btn:hover{background:rgba(212,175,55,.12);border-color:rgba(212,175,55,.35);color:var(--gold)}
+    .guest-expired{color:#F87171;font-size:13px;text-align:center}
+
+    /* ── MY CARDS ── */
+    #screen-my-cards{background:#0B1220;padding:0}
+    .sub-header{display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(0,0,0,.25);border-bottom:1px solid rgba(255,255,255,.06)}
+    .sub-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--gold);flex:1}
+    .cards-list-area{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+    .card-item{background:var(--panel2);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start}
+    .card-item-meta{flex:1;min-width:0}
+    .card-item-tipo{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-d);margin-bottom:4px}
+    .card-item-texto{font-size:13px;color:var(--txt);line-height:1.4}
+    .card-item-nivel{font-size:10px;color:var(--txt2);margin-top:4px}
+    .card-item-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+    .empty-state{text-align:center;color:var(--txt2);font-size:13px;padding:40px 20px;line-height:1.7}
+    .card-item.disabled{border-color:rgba(239,68,68,.2);background:rgba(255,255,255,.02)}
+    .card-item.disabled .card-item-texto{opacity:.4}
+    .disabled-badge{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--danger);margin-left:6px}
+
+    /* ── GAME ── */
+    #screen-game{padding:0 0 0;flex-direction:column}
+    .game-body{padding:10px 16px 12px;display:flex;flex-direction:column;flex:1;overflow:hidden}
+    .guest-banner{background:rgba(212,175,55,.1);border-bottom:1px solid rgba(212,175,55,.22);padding:9px 16px;font-size:12px;color:rgba(212,175,55,.75);text-align:center;flex-shrink:0;letter-spacing:1px}
+    .guest-banner strong{color:var(--gold)}
+    .guest-banner.my-turn{background:rgba(212,175,55,.18);color:var(--gold)}
+    .game-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-shrink:0}
+    .back-btn,.shuffle-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.5);padding:7px 12px;font-size:11px;cursor:pointer;transition:background .15s;min-height:36px}
+    .back-btn:hover,.shuffle-btn:hover{background:rgba(255,255,255,.11);color:rgba(255,255,255,.8)}
+    .game-meta{text-align:center}
+    .mode-badge{display:inline-block;padding:3px 12px;border-radius:20px;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700;color:var(--gold);background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.35)}
+    .card-counter{font-size:10px;color:rgba(212,175,55,.35);margin-top:2px}
+
+    /* current player bar */
+    .turn-bar{display:flex;align-items:center;justify-content:center;gap:8px;padding:7px 12px;background:rgba(212,175,55,.07);border:1px solid rgba(212,175,55,.18);border-radius:8px;margin-bottom:8px;flex-shrink:0}
+    .turn-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(212,175,55,.5)}
+    .turn-name{font-family:'Playfair Display',serif;font-size:15px;color:var(--gold);font-weight:700}
+    .turn-joker-hold{font-size:14px;margin-left:4px;cursor:pointer;title:"Você tem um Coringa!"}
+
+    /* joker holders strip */
+    .jokers-strip{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:6px;flex-shrink:0;min-height:0}
+    .joker-chip{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;background:rgba(183,149,11,.15);border:1px solid rgba(183,149,11,.35);font-size:11px;color:#D4AF37;cursor:pointer;transition:background .15s}
+    .joker-chip:hover{background:rgba(183,149,11,.28)}
+
+    .card-area{flex:1;display:flex;align-items:center;justify-content:center;perspective:1200px;cursor:pointer;min-height:0;padding:4px 0}
+    .card-wrap{position:relative;width:min(84vw,340px);aspect-ratio:63/88}
+    .card-shadow{position:absolute;inset:0;border-radius:16px;background:rgba(0,0,0,.4);transform:translate(6px,10px) scale(.96);filter:blur(12px);z-index:0}
+    .card-3d{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .65s cubic-bezier(.4,0,.2,1);border-radius:16px;z-index:1}
+    .card-3d.flipped{transform:rotateY(180deg)}
+    .card-face{position:absolute;inset:0;border-radius:16px;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
+    .card-back{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+    .cb-n1{background:linear-gradient(155deg,#091633,#0E2450,#091633);border:2px solid rgba(212,175,55,.45)}
+    .cb-n2{background:linear-gradient(155deg,#071A0D,#0D2E15,#071A0D);border:2px solid rgba(212,175,55,.45)}
+    .cb-n3{background:linear-gradient(155deg,#1E0800,#351200,#1E0800);border:2px solid rgba(212,175,55,.45)}
+    .cb-all{background:linear-gradient(155deg,#0D0820,#1A1035,#0D0820);border:2px solid rgba(212,175,55,.45)}
+    .cb-joker{background:linear-gradient(155deg,#2A1C00,#4A3200,#2A1C00);border:2px solid rgba(212,175,55,.65)}
+    .cb-custom{background:linear-gradient(155deg,#1a0a2a,#2d1050,#1a0a2a);border:2px solid rgba(180,120,255,.45)}
+    .cb-pack{background:linear-gradient(155deg,#001a2a,#00304a,#001a2a);border:2px solid rgba(80,200,255,.4)}
+    .back-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 20%,rgba(212,175,55,.1) 0%,transparent 55%);pointer-events:none}
+    .back-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:6px}
+    .back-inner svg{width:48px;height:auto}
+    .back-brand{font-family:'Playfair Display',serif;font-size:13px;font-weight:700;letter-spacing:4px;color:var(--gold)}
+    .back-flames{font-size:13px;letter-spacing:1px;margin-top:2px}
+    .card-front{transform:rotateY(180deg);background:var(--cream);border:2px solid var(--gold-d);display:flex;flex-direction:column;align-items:center;padding:10px 9px 9px}
+    .card-front::before{content:'';position:absolute;inset:7px;border:1px solid rgba(168,136,32,.45);border-radius:10px;pointer-events:none}
+    .crnr{position:absolute;width:16px;height:16px;pointer-events:none}
+    .crnr.tl{top:10px;left:10px}.crnr.tr{top:10px;right:10px;transform:scaleX(-1)}
+    .crnr.bl{bottom:10px;left:10px;transform:scaleY(-1)}.crnr.br{bottom:10px;right:10px;transform:scale(-1,-1)}
+    .front-tipo{font-family:'Playfair Display',serif;font-size:clamp(13px,3.8vw,17px);font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold-d);margin-top:4px;position:relative;z-index:1;flex-shrink:0}
+    .front-icon{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:2px 0;position:relative;z-index:1}
+    .front-icon img{width:min(68vw,250px);height:auto;object-fit:contain}
+    .front-hr{width:55%;height:1px;background:linear-gradient(90deg,transparent,var(--gold-d),transparent);opacity:.55;flex-shrink:0;position:relative;z-index:1}
+    .front-texto{font-family:'Playfair Display',serif;font-size:clamp(15px,5.2vw,21px);font-style:italic;color:var(--ink);text-align:center;line-height:1.5;padding:6px 10px 4px;position:relative;z-index:1;flex-shrink:0}
+    .drawn-name{font-style:normal;font-weight:700;color:#8B1A1A;text-decoration:underline dotted}
+
+    /* bottom controls */
+    .tap-hint{text-align:center;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(212,175,55,.3);padding:4px 0;flex-shrink:0;transition:opacity .3s}
+    .sortear-bar{display:flex;gap:8px;flex-shrink:0;padding:4px 0;align-items:center}
+    .sortear-btn{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(212,175,55,.3);background:rgba(212,175,55,.07);color:var(--gold);font-size:12px;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Lato',sans-serif}
+    .sortear-btn:hover{background:rgba(212,175,55,.15)}
+    .sortear-result-chip{padding:8px 12px;border-radius:8px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.25);font-size:12px;color:var(--gold);display:flex;align-items:center;gap:5px}
+    .btn-row{display:flex;gap:8px;flex-shrink:0;padding:6px 0 4px}
+    .next-btn{flex:1;padding:13px;border-radius:10px;border:none;font-family:'Playfair Display',serif;font-size:14px;font-style:italic;cursor:pointer;min-height:48px;transition:transform .14s}
+    .next-btn:hover{transform:translateY(-1px)}.next-btn:active{transform:scale(.97)}
+    .next-n1{background:linear-gradient(135deg,#122A5E,#1E4A9E);color:var(--gold)}
+    .next-n2{background:linear-gradient(135deg,#0E3018,#1A5028);color:var(--gold)}
+    .next-n3{background:linear-gradient(135deg,#3C1000,#6A2000);color:var(--gold)}
+    .next-all,.next-custom{background:linear-gradient(135deg,#1A1035,#2E1C5A);color:var(--gold)}
+    .next-joker{background:linear-gradient(135deg,#4A3200,#7A5400);color:#FFF8DC}
+    .next-pack{background:linear-gradient(135deg,#00304a,#005a8a);color:#80d4ff}
+    .skip-btn{padding:13px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.35);font-size:12px;cursor:pointer;min-height:48px}
+    .progress-bar{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:4px;flex-shrink:0}
+    .progress-fill{height:100%;border-radius:2px;transition:width .4s ease}
+    .prog-n1{background:linear-gradient(90deg,#1A3A7E,#4A7ADE)}
+    .prog-n2{background:linear-gradient(90deg,#1A4A28,#4A9A60)}
+    .prog-n3{background:linear-gradient(90deg,#5A1A00,#C04020)}
+    .prog-all,.prog-custom{background:linear-gradient(90deg,var(--gold-d),var(--gold-l))}
+    .prog-joker{background:linear-gradient(90deg,#7A5400,var(--gold-l))}
+    .prog-pack{background:linear-gradient(90deg,#005a8a,#00a0d0)}
+
+    /* ── END ── */
+    #screen-end{background:#0B1A3E;align-items:center;justify-content:center;text-align:center;padding:32px 20px}
+    .end-icon{font-size:54px;margin-bottom:14px}
+    .end-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--gold);margin-bottom:10px}
+    .end-sub{font-size:13px;color:rgba(212,175,55,.45);line-height:1.7;margin-bottom:28px}
+    .end-btns{display:flex;flex-direction:column;gap:10px;width:100%;max-width:280px}
+    .end-btn{padding:15px;border-radius:10px;font-family:'Playfair Display',serif;font-size:15px;font-style:italic;cursor:pointer;border:none;min-height:50px;transition:transform .14s}
+    .end-btn:hover{transform:translateY(-2px)}
+    .end-restart{background:linear-gradient(135deg,#122A5E,#1E4A9E);color:var(--gold)}
+    .end-menu{background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.3);color:var(--gold)}
+    .end-players{font-size:13px;color:rgba(212,175,55,.55);margin-bottom:16px}
+
+    /* ── ADMIN ── */
+    #screen-admin{background:var(--panel);padding:0;flex-direction:column}
+    .admin-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(0,0,0,.3);border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+    .admin-logo{display:flex;align-items:center;gap:8px}
+    .admin-logo svg{width:28px}
+    .admin-logo span{font-family:'Playfair Display',serif;font-size:15px;color:var(--gold);letter-spacing:3px}
+    .admin-badge{font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:3px 8px;border-radius:10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#F87171}
+    .admin-content{flex:1;overflow-y:auto;padding:16px}
+    .admin-tabs{display:flex;gap:0;flex-shrink:0;border-top:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.3)}
+    .atab{flex:1;padding:12px 4px 10px;border:none;background:transparent;color:var(--txt2);font-size:10px;font-family:'Lato',sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;border-top:2px solid transparent;transition:color .15s}
+    .atab.active{color:var(--gold);border-top-color:var(--gold)}
+    .atab-icon{font-size:18px}
+    .admin-section{display:none}.admin-section.active{display:block}
+    .section-title{font-family:'Playfair Display',serif;font-size:17px;color:var(--gold);margin-bottom:14px}
+    .section-subtitle{font-size:12px;color:var(--txt2);margin-bottom:16px;line-height:1.5}
+    .custom-group{margin-bottom:18px}
+    .custom-group-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--txt2);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.07)}
+    .custom-card-row{background:var(--panel2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border:1px solid rgba(255,255,255,.06)}
+    .custom-card-tipo{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-d);margin-bottom:3px}
+    .custom-card-text{font-size:13px;color:var(--txt);line-height:1.4}
+    .custom-card-footer{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+    .custom-card-nivel{font-size:10px;color:var(--txt2)}
+    .default-card-row{background:var(--panel2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border:1px solid rgba(255,255,255,.06);display:flex;gap:8px;align-items:flex-start}
+    .default-card-info{flex:1;min-width:0}
+    .default-card-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+    .nivel-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+    .nivel-tab{padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.15);background:transparent;color:var(--txt2);font-size:12px;cursor:pointer;transition:all .15s}
+    .nivel-tab.active{background:rgba(212,175,55,.15);border-color:rgba(212,175,55,.4);color:var(--gold)}
+    .pack-row{background:var(--panel2);border-radius:10px;padding:14px;margin-bottom:10px;border:1px solid rgba(255,255,255,.07)}
+    .pack-row-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+    .pack-row-name{font-family:'Playfair Display',serif;font-size:15px;color:var(--txt)}
+    .pack-row-meta{font-size:11px;color:var(--txt2);margin-top:2px}
+    .pack-row-actions{display:flex;gap:6px}
+    .pack-tag{display:inline-block;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:rgba(212,175,55,.1);color:var(--gold-d);border:1px solid rgba(212,175,55,.2);margin-right:4px;margin-bottom:4px}
+    .user-row{background:var(--panel2);border-radius:10px;padding:14px;margin-bottom:10px;border:1px solid rgba(255,255,255,.07)}
+    .user-row-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .user-row-login{font-size:15px;color:var(--txt);font-weight:700}
+    .user-row-type{font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:10px}
+    .type-admin{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#F87171}
+    .type-vip{background:rgba(212,175,55,.15);border:1px solid rgba(212,175,55,.3);color:var(--gold)}
+    .type-promo{background:rgba(156,163,175,.1);border:1px solid rgba(156,163,175,.25);color:var(--txt2)}
+    .blocked-badge{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(239,68,68,.1);color:#F87171;border:1px solid rgba(239,68,68,.25)}
+    .user-row-actions{display:flex;gap:6px;flex-wrap:wrap}
+    .user-row-info{font-size:11px;color:var(--txt2);margin-bottom:8px}
+
+    /* modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:flex;align-items:flex-end;justify-content:center}
+    .modal-overlay.hidden{display:none}
+    .modal-box{width:100%;max-width:430px;background:var(--panel);border-radius:18px 18px 0 0;padding:20px 18px 32px;max-height:90dvh;overflow-y:auto}
+    .modal-title{font-family:'Playfair Display',serif;font-size:17px;color:var(--gold);margin-bottom:16px}
+    .modal-actions{display:flex;gap:10px;margin-top:10px}
+
+    @keyframes cardIn{from{opacity:0;transform:scale(.88) translateY(18px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    .card-wrap{animation:cardIn .38s ease forwards}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spinning{display:inline-block;animation:spin .5s linear infinite}
+  </style>
+</head>
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <defs>
+    <symbol id="logo-3epar" viewBox="0 0 90 72">
+      <g fill="#D4AF37">
+        <path d="M45,32 C45,32 33,21 33,28 C33,35 45,40 45,40 C45,40 57,35 57,28 C57,21 45,32 45,32Z"/>
+        <path d="M45,54 C37,48 20,50 19,59 C18,67 28,68 37,63 C42,60 45,54 45,54 C45,54 48,60 53,63 C62,68 72,67 71,59 C70,50 53,48 45,54Z"/>
+        <g transform="translate(26,53) rotate(-22) translate(-13,-12)"><path d="M13,22 C13,22 1,12 1,19 C1,26 13,30 13,30 C13,30 25,26 25,19 C25,12 13,22 13,22Z"/></g>
+        <g transform="translate(64,53) rotate(22) translate(-13,-12)"><path d="M13,22 C13,22 1,12 1,19 C1,26 13,30 13,30 C13,30 25,26 25,19 C25,12 13,22 13,22Z"/></g>
+      </g>
+    </symbol>
+    <symbol id="icon-pineapple" viewBox="0 0 60 95">
+      <g fill="#C9A227">
+        <path d="M30,36 C28,28 22,14 26,4 C28,12 29,26 30,36Z" opacity=".9"/>
+        <path d="M30,36 C30,24 32,10 30,2 C32,10 33,24 30,36Z"/>
+        <path d="M30,36 C32,28 38,14 34,4 C32,12 31,26 30,36Z" opacity=".9"/>
+        <path d="M30,36 C26,22 16,12 18,4 C22,14 27,26 30,36Z" opacity=".7"/>
+        <path d="M30,36 C34,22 44,12 42,4 C38,14 33,26 30,36Z" opacity=".7"/>
+        <ellipse cx="30" cy="66" rx="20" ry="27"/>
+        <g stroke="#E8D060" stroke-width=".8" fill="none" opacity=".45">
+          <path d="M14,52 L46,52 M11,63 L49,63 M13,74 L47,74 M18,85 L42,85"/>
+          <path d="M20,40 L26,92 M26,39 L31,92 M32,39 L36,92 M38,40 L34,92"/>
+        </g>
+      </g>
+    </symbol>
+    <symbol id="icon-butterfly" viewBox="0 0 100 80">
+      <g fill="#C9A227">
+        <path d="M50,36 C46,28 34,18 18,20 C4,22 6,38 20,36 C34,34 50,36 50,36Z"/>
+        <path d="M50,36 C54,28 66,18 82,20 C96,22 94,38 80,36 C66,34 50,36 50,36Z"/>
+        <path d="M50,42 C42,50 28,56 18,66 C10,74 22,80 32,72 C42,64 50,42 50,42Z"/>
+        <path d="M50,42 C58,50 72,56 82,66 C90,74 78,80 68,72 C58,64 50,42 50,42Z"/>
+        <ellipse cx="50" cy="40" rx="4" ry="22"/>
+        <path d="M47,20 Q39,10 35,5" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round"/>
+        <path d="M53,20 Q61,10 65,5" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="35" cy="5" r="2.5"/><circle cx="65" cy="5" r="2.5"/>
+      </g>
+    </symbol>
+    <symbol id="icon-crown" viewBox="0 0 80 58">
+      <g fill="#D4AF37">
+        <path d="M6,48 L12,18 L28,36 L40,8 L52,36 L68,18 L74,48Z"/>
+        <rect x="6" y="48" width="68" height="8" rx="3"/>
+        <circle cx="40" cy="8" r="4"/><circle cx="12" cy="18" r="3.5"/><circle cx="68" cy="18" r="3.5"/>
+      </g>
+    </symbol>
+    <symbol id="corner" viewBox="0 0 18 18">
+      <path d="M2,16 Q2,2 16,2" fill="none" stroke="#A88820" stroke-width="1.2"/>
+      <circle cx="2" cy="16" r="1.5" fill="#A88820"/>
+      <circle cx="16" cy="2" r="1.5" fill="#A88820"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div id="app">
+
+  <!-- LOGIN -->
+  <div id="screen-login" class="screen active">
+    <div class="login-box">
+      <img src="logo.png" class="logo-svg" alt="3ÉPAR"/>
+      <div class="logo-tagline">Consentimento e Prazer</div>
+      <div class="hr-gold" style="width:100%;margin-top:10px"></div>
+      <div class="login-form">
+        <div class="field"><label>Login</label><input type="text" id="login-input" placeholder="seu login" autocomplete="username"/></div>
+        <div class="field"><label>Senha</label><input type="password" id="senha-input" placeholder="••••••••" autocomplete="current-password"/></div>
+        <div class="err-msg" id="login-err"></div>
+        <button class="btn btn-gold btn-full" style="margin-top:6px" onclick="doLogin()">Entrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MENU -->
+  <div id="screen-menu" class="screen">
+    <div class="menu-topbar">
+      <div class="user-pill">
+        <div class="user-avatar" id="menu-avatar">?</div>
+        <div><div class="user-name" id="menu-username"></div><div class="user-type" id="menu-usertype"></div></div>
+      </div>
+      <div class="topbar-btns"><button class="icon-btn" onclick="goLogout()">Sair</button></div>
+    </div>
+    <div class="logo-block" style="margin-top:10px">
+      <img src="logo.png" class="logo-svg" alt="3ÉPAR"/>
+      <div class="logo-tagline">Consentimento e Prazer</div>
+    </div>
+    <div class="hr-gold"></div>
+    <p class="menu-sub">Cartas Padrão</p>
+    <div class="level-grid">
+      <button class="lvl-btn l1" id="btn-n1" onclick="openPlayerSetup('n1')">
+        <div class="lvl-flames">🔥</div>
+        <span class="lvl-num">Nível 1</span>
+        <span class="lvl-title">Aquece&shy;mento</span>
+        <span class="lvl-count" id="count-n1">— cartas</span>
+      </button>
+      <button class="lvl-btn l2" id="btn-n2" onclick="tryLevel('n2')">
+        <span class="lock-icon" id="lock-n2">🔒</span>
+        <div class="lvl-flames">🔥🔥</div>
+        <span class="lvl-num">Nível 2</span>
+        <span class="lvl-title">Ousadia</span>
+        <span class="lvl-count" id="count-n2">— cartas</span>
+      </button>
+      <button class="lvl-btn l3" id="btn-n3" onclick="tryLevel('n3')">
+        <span class="lock-icon" id="lock-n3">🔒</span>
+        <div class="lvl-flames">🔥🔥🔥</div>
+        <span class="lvl-num">Nível 3</span>
+        <span class="lvl-title">Proibido</span>
+        <span class="lvl-count" id="count-n3">— cartas</span>
+      </button>
+    </div>
+    <button class="all-btn" onclick="openPlayerSetup('all')">✦ Todos os níveis juntos ✦</button>
+<button id="my-cards-btn" class="my-cards-btn" onclick="showScreen('screen-my-cards');renderMyCards()">✎ Minhas Cartas Personalizadas</button>
+    <div id="packs-section" style="display:none">
+      <div class="packs-label">Packs Disponíveis</div>
+      <div id="packs-list"></div>
+    </div>
+  </div>
+
+  <!-- PLAYER SETUP -->
+  <div id="screen-players" class="screen">
+    <div class="ps-header">
+      <button class="icon-btn" onclick="showScreen('screen-menu');renderMenu()">← Voltar</button>
+      <div class="ps-title">Jogadores</div>
+    </div>
+    <div class="ps-body">
+      <div class="ps-add-row">
+        <input type="text" id="ps-input" placeholder="Nome do jogador..." maxlength="20" onkeydown="if(event.key==='Enter')addPlayer()"/>
+        <button class="btn btn-gold btn-sm" onclick="addPlayer()">+ Add</button>
+      </div>
+      <div class="players-list" id="players-list"></div>
+      <div id="sortear-result" style="display:none" class="sortear-result"></div>
+      <div id="share-section" style="display:none">
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(212,175,55,.5);margin-bottom:6px">Link da Partida (válido 1 hora)</div>
+        <div class="share-link-box">
+          <div style="font-size:clamp(14px,4vw,18px);color:rgba(212,175,55,.85);margin-bottom:8px;line-height:1.5;font-weight:600">Compartilhe esse link com os jogadores para que cada um possa jogar pelo próprio celular</div>
+          <div id="share-link-txt" style="word-break:break-all;font-size:11px;color:var(--txt2)"></div>
+        </div>
+        <button class="btn btn-gold btn-full" style="margin-top:8px" onclick="shareLink()">📤 Compartilhar Link</button>
+      </div>
+    </div>
+    <div class="ps-footer">
+      <button class="btn btn-outline btn-full" onclick="generateShareLink()">🔗 Convidar Jogadores — LINK DA PARTIDA</button>
+      <button class="btn btn-outline btn-full" id="ps-sortear-btn" onclick="sortearInicio()" disabled>🎲 Sortear quem começa</button>
+      <button class="btn btn-gold btn-full" id="ps-start-btn" onclick="beginGame()" disabled>Começar Jogo →</button>
+    </div>
+  </div>
+
+  <!-- GUEST JOIN -->
+  <div id="screen-guest" class="screen">
+    <div class="guest-box">
+      <img src="logo.png" style="width:min(62vw,230px);height:auto" alt="3ÉPAR"/>
+      <div class="guest-title" id="guest-title">Você foi convidado!</div>
+      <div class="guest-sub" id="guest-sub">Selecione o seu nome para entrar na partida como jogador.</div>
+      <div class="guest-players" id="guest-players-list"></div>
+      <div class="guest-expired" id="guest-expired" style="display:none">Este link expirou. Peça um novo link ao anfitrião.</div>
+    </div>
+  </div>
+
+  <!-- MY CARDS -->
+  <div id="screen-my-cards" class="screen">
+    <div class="sub-header">
+      <button class="icon-btn" onclick="showScreen('screen-menu');renderMenu()">← Voltar</button>
+      <div class="sub-title">Minhas Cartas</div>
+      <button class="btn btn-sm btn-gold" onclick="openCardModal()">+ Adicionar</button>
+    </div>
+    <div class="cards-list-area" id="my-cards-list"></div>
+  </div>
+
+  <!-- GAME -->
+  <div id="screen-game" class="screen">
+    <div id="guest-banner" class="guest-banner" style="display:none">
+      Jogando como <strong id="guest-banner-name"></strong>
+    </div>
+    <div class="game-body">
+    <div class="game-header">
+      <button class="back-btn" onclick="goMenu()">← Menu</button>
+      <div class="game-meta">
+        <div id="mode-badge" class="mode-badge"></div>
+        <div id="card-counter" class="card-counter"></div>
+      </div>
+      <button class="shuffle-btn" onclick="shuffleDeck()">⟳</button>
+    </div>
+    <div class="turn-bar" id="turn-bar" style="display:none">
+      <span class="turn-label">Vez de</span>
+      <span class="turn-name" id="turn-name"></span>
+    </div>
+    <div class="jokers-strip" id="jokers-strip"></div>
+    <div class="card-area" onclick="flipCard()">
+      <div class="card-wrap" id="card-wrap">
+        <div class="card-shadow"></div>
+        <div class="card-3d" id="card3d">
+          <div class="card-face card-back" id="card-back-face"></div>
+          <div class="card-face card-front" id="card-front-face"></div>
+        </div>
+      </div>
+    </div>
+    <div class="tap-hint" id="tap-hint">Toque para revelar</div>
+    <div class="sortear-bar" id="sortear-bar" style="display:none">
+      <button class="sortear-btn" onclick="sortearParceiro()">🎲 Sortear parceiro</button>
+      <div class="sortear-result-chip" id="sortear-chip" style="display:none"></div>
+    </div>
+    <div class="btn-row">
+      <button class="next-btn" id="next-btn" onclick="nextCard()">Próxima →</button>
+      <button class="skip-btn" onclick="nextCard()">Pular</button>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    </div><!-- /game-body -->
+  </div>
+
+  <!-- END -->
+  <div id="screen-end" class="screen">
+    <div class="end-icon">🃏</div>
+    <div class="end-title">Baralho esgotado!</div>
+    <div class="end-players" id="end-players"></div>
+    <p class="end-sub">Todas as cartas foram jogadas.<br>A noite foi inesquecível?</p>
+    <div class="end-btns">
+      <button class="end-btn end-restart" onclick="restartGame()">Jogar novamente ↺</button>
+      <button class="end-btn end-menu" onclick="goMenu()">Escolher outro nível</button>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="screen-admin" class="screen">
+    <div class="admin-header">
+      <div class="admin-logo">
+        <img src="logo.png" style="width:80px;height:auto" alt="3ÉPAR"/>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="admin-badge">ADMIN</span>
+        <button class="icon-btn btn-sm" onclick="goLogout()">Sair</button>
+      </div>
+    </div>
+    <div class="admin-content" id="admin-content"></div>
+    <div class="admin-tabs">
+      <button class="atab active" data-tab="custom" onclick="adminTab('custom')"><span class="atab-icon">👁</span>Custom</button>
+      <button class="atab" data-tab="default" onclick="adminTab('default')"><span class="atab-icon">🃏</span>Padrão</button>
+      <button class="atab" data-tab="packs" onclick="adminTab('packs')"><span class="atab-icon">📦</span>Packs</button>
+      <button class="atab" data-tab="users" onclick="adminTab('users')"><span class="atab-icon">👥</span>Usuários</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="modal-overlay hidden" id="modal-overlay" onclick="closeModalIfBg(event)">
+  <div class="modal-box" id="modal-box"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+// ══ CARTAS PADRÃO ══
+const JOKER_CARD = {tipo:'Coringa',isLevelJoker:true,texto:'Você tem o poder do Coringa. Quando receber um desafio ou pergunta, pode passar para o jogador que quiser — uma única vez.'};
+
+const BASE_CARDS = {
+  n1: [
+    {tipo:'Desafio',texto:'Tente acertar qual a cor da cueca/calcinha da pessoa da direita. Se errar, tire uma peça de roupa.'},
+    {tipo:'Desafio',texto:'Conte uma piada ou faça algo engraçado. Quem rir tem que tirar uma peça de roupa.'},
+    {tipo:'Desafio',texto:'Escolha alguém para tirar uma peça de roupa.'},
+    {tipo:'Desafio',texto:'Confesse: Se eu soubesse que não seria pego, eu...'},
+    {tipo:'Desafio',texto:'Tire uma peça de roupa.'},
+    {tipo:'Desafio',texto:'Sussurre algo no ouvido para excitar o jogador que for sorteado.'},
+    {tipo:'Pergunta',texto:'Qual sua posição preferida?'},
+    {tipo:'Pergunta',texto:'O que te dá mais tesão?'},
+    {tipo:'Pergunta',texto:'O que mais te brocha?'},
+    {tipo:'Pergunta',texto:'Qual lugar você gosta de ser beijado(a) e tocado(a)?'},
+    {tipo:'Pergunta',texto:'Você gosta de dominar ou ser dominado(a)?'},
+    {tipo:'Pergunta',texto:'Que tipo de música gosta de escutar transando?'},
+    {tipo:'Pergunta',texto:'Tem algum tabu no sexo?'},
+    {tipo:'Pergunta',texto:'Quando foi que transou a última vez?'},
+    {tipo:'Pergunta',texto:'Já acordou excitado(a) de sonho?'},
+    {tipo:'Pergunta',texto:'Qual celebridade você pegaria facinho?'},
+    {tipo:'Pergunta',texto:'O que seria uma boa preliminar para você?'},
+    {tipo:'Pergunta',texto:'Com quantos anos perdeu a virgindade?'},
+    {...JOKER_CARD},
+  ],
+  n2: [
+    {tipo:'Desafio',texto:'O jogador que for sorteado escolhe um desafio para você cumprir.'},
+    {tipo:'Desafio',texto:'Simule sexo oral utilizando algum objeto ao alcance. Seja criativo(a).'},
+    {tipo:'Desafio',texto:'Beije por 30 segundos o pescoço do jogador que for sorteado.'},
+    {tipo:'Desafio',texto:'Mostre um vídeo pornô que tenha gostado.'},
+    {tipo:'Desafio',texto:'Fale o nome de 5 posições sexuais. Se errar, tire uma peça de roupa.'},
+    {tipo:'Desafio',texto:'Remova uma peça de roupa com os dentes do jogador que for sorteado.'},
+    {tipo:'Desafio',texto:'O jogador à sua esquerda escolhe um desafio.'},
+    {tipo:'Desafio',texto:'Todos tiram uma peça de roupa.'},
+    {tipo:'Desafio',texto:'Mostre um nude para todos. Se não tiver, tire um agora e mostre.'},
+    {tipo:'Desafio',texto:'Vende os olhos. O jogador que for sorteado te dá um selinho. Se acertar quem foi, todos bebem. Se errar, você bebe.'},
+    {tipo:'Desafio',texto:'Simule um orgasmo.'},
+    {tipo:'Desafio',texto:'Faça uma massagem sensual no jogador que for sorteado.'},
+    {tipo:'Pergunta',texto:'Como você chega ao orgasmo de forma mais rápida?'},
+    {tipo:'Pergunta',texto:'Do que você gosta de ser chamado(a) na hora H?'},
+    {tipo:'Pergunta',texto:'O que você faz para que as pessoas sintam desejo por você?'},
+    {tipo:'Pergunta',texto:'Qual o lugar mais inusitado que já transou? Conte com detalhes.'},
+    {tipo:'Pergunta',texto:'Máximo de orgasmos que teve em um dia?'},
+    {tipo:'Pergunta',texto:'Já fez sexo dentro do carro?'},
+    {tipo:'Pergunta',texto:'Já tirou a virgindade de alguém? Conte com detalhes.'},
+    {tipo:'Pergunta',texto:'Qual foi seu melhor orgasmo?'},
+    {tipo:'Pergunta',texto:'Gosta de sexo mais selvagem?'},
+    {tipo:'Pergunta',texto:'Já viu outras pessoas transando? O que mais gostou?'},
+    {tipo:'Pergunta',texto:'Se tivesse que escolher: Sexo Oral ou Penetração pelo resto da vida?'},
+    {tipo:'Pergunta',texto:'Já fingiu orgasmo?'},
+    {tipo:'Pergunta',texto:'Como foi sua pior transa?'},
+    {tipo:'Pergunta',texto:'Se tivesse que escolher uma posição para transar para o resto da vida, qual seria?'},
+    {tipo:'Pergunta',texto:'Qual a coisa mais safada que você já fez?'},
+    {tipo:'Pergunta',texto:'Qual o lugar onde tem vontade de transar que ainda não transou?'},
+    {tipo:'Pergunta',texto:'Já fez massagem tântrica?'},
+    {...JOKER_CARD},
+  ],
+  n3: [
+    {tipo:'Desafio',texto:'Dê um beijo na virilha do jogador que for sorteado.'},
+    {tipo:'Desafio',texto:'Coloque as mãos dentro da calcinha/cueca por 30 segundos do jogador que for sorteado.'},
+    {tipo:'Desafio',texto:'Beije por 30 segundos o mamilo do jogador que for sorteado.'},
+    {tipo:'Desafio',texto:'Faça Bodyshot no jogador que for sorteado.'},
+    {tipo:'Desafio',texto:'Beije alguém que você ainda não beijou.'},
+    {tipo:'Desafio',texto:'Demonstre como você faz a posição de quatro.'},
+    {tipo:'Desafio',texto:'Finja que está fazendo sexo com o jogador que for sorteado.'},
+    {tipo:'Desafio',texto:'Chupe o jogador que for sorteado por 10 segundos.'},
+    {tipo:'Desafio',texto:'Deixe o jogador que for sorteado te masturbar por 30 segundos.'},
+    {tipo:'Desafio',texto:'Masturbe por 30 segundos o jogador que for sorteado.'},
+    {tipo:'Desafio',texto:'Deixe o jogador que for sorteado fazer o que quiser com você por 1 minuto.'},
+    {tipo:'Pergunta',texto:'Já fez sexo com várias pessoas olhando?'},
+    {tipo:'Pergunta',texto:'Já ficou com alguém comprometido(a)?'},
+    {tipo:'Pergunta',texto:'Qual foi a última vez que fez anal?'},
+    {tipo:'Pergunta',texto:'Qual a pessoa mais velha com quem já transou?'},
+    {tipo:'Pergunta',texto:'Qual a pessoa mais nova com quem já transou?'},
+    {tipo:'Pergunta',texto:'Já fez DP?'},
+    {tipo:'Pergunta',texto:'Já usou algum vegetal ou fruta para se masturbar?'},
+    {tipo:'Pergunta',texto:'Já foi pego(a) transando?'},
+    {tipo:'Pergunta',texto:'Tem ou já teve algum vídeo transando?'},
+    {tipo:'Pergunta',texto:'Gosta de ser amarrado(a) / algemado(a)?'},
+    {tipo:'Pergunta',texto:'Já transou com alguém do trabalho?'},
+    {tipo:'Pergunta',texto:'Gosta de usar brinquedinhos? Qual seu preferido?'},
+    {tipo:'Pergunta',texto:'Qual o maior tempo que já ficou sem sexo?'},
+    {tipo:'Pergunta',texto:'Já flagrou alguém fazendo sexo?'},
+    {tipo:'Pergunta',texto:'Fazer sexo ou fazer amor?'},
+    {tipo:'Pergunta',texto:'Qual a situação mais constrangedora que você já viveu durante o sexo?'},
+    {tipo:'Pergunta',texto:'Já teve um orgasmo em menos de 1 minuto?'},
+    {tipo:'Pergunta',texto:'Já transou com algum(a) amigo(a)?'},
+    {tipo:'Pergunta',texto:'Já transou com algum(a) estranho(a)?'},
+    {tipo:'Pergunta',texto:'Qual o maior número de pessoas com quem transou em um dia?'},
+    {tipo:'Pergunta',texto:'Já transou com alguém da família?'},
+    {tipo:'Pergunta',texto:'Faria sexo por dinheiro?'},
+    {tipo:'Pergunta',texto:'Já traiu?'},
+    {tipo:'Pergunta',texto:'Já foi traído(a)?'},
+    {tipo:'Pergunta',texto:'Qual seu tipo preferido de porno?'},
+    {tipo:'Pergunta',texto:'Qual a coisa mais estranha que te excita?'},
+    {tipo:'Pergunta',texto:'Qual a coisa mais embaraçosa que você já escutou durante o sexo?'},
+    {...JOKER_CARD},
+  ],
+  joker:[
+    {tipo:'Coringa',texto:'Você tem direito a passar o desafio para outra pessoa.'},
+    {tipo:'Coringa',texto:'Você tem direito a passar o desafio para outra pessoa.'},
+    {tipo:'Coringa',texto:'Você tem direito a passar o desafio para outra pessoa.'},
+    {tipo:'Coringa',texto:'Você tem direito a passar o desafio para outra pessoa.'},
+    {tipo:'Coringa',texto:'Você tem direito a passar o desafio para outra pessoa.'},
+    {tipo:'Coringa',texto:'Você tem direito a passar o desafio para outra pessoa.'},
+  ]
+};
+
+// ══ DATA LAYER ══
+const SK={users:'3epar_users',session:'3epar_session',customCards:'3epar_custom_cards',extraDefault:'3epar_extra_default',packs:'3epar_packs',progress:'3epar_progress'};
+function dbGet(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch(e){return f;}}
+function dbSet(k,v){localStorage.setItem(k,JSON.stringify(v));}
+
+function initDB(){
+  if(!localStorage.getItem(SK.users)){
+    dbSet(SK.users,[
+      {id:1,login:'admin',senha:'D5m3ubn7!',tipo:'admin',ativo:true,nome:'Administrador'},
+      {id:2,login:'teste',senha:'teste',tipo:'promo',ativo:true,nome:'Teste'}
+    ]);
+  }
+}
+function getUsers(){return dbGet(SK.users,[]);}
+function saveUsers(u){dbSet(SK.users,u);}
+function getCustomCards(){return dbGet(SK.customCards,[]);}
+function saveCustomCards(c){dbSet(SK.customCards,c);}
+function getExtraDefault(){return dbGet(SK.extraDefault,[]);}
+function saveExtraDefault(c){dbSet(SK.extraDefault,c);}
+function getPacks(){return dbGet(SK.packs,[]);}
+function savePacks(p){dbSet(SK.packs,p);}
+
+function getProgress(uid){const all=dbGet(SK.progress,{});return all[uid]||{n1:true,n2:false,n3:false};}
+function setLevelDone(uid,lvl){const all=dbGet(SK.progress,{});if(!all[uid])all[uid]={n1:true,n2:false,n3:false};all[uid][lvl]=true;if(lvl==='n1')all[uid].n2=true;if(lvl==='n2')all[uid].n3=true;dbSet(SK.progress,all);}
+
+function isVIP(user){return user&&(user.tipo==='vip'||user.tipo==='admin');}
+
+// ══ AUTH ══
+let currentUser=null;
+
+function doLogin(){
+  const login=document.getElementById('login-input').value.trim();
+  const senha=document.getElementById('senha-input').value;
+  const err=document.getElementById('login-err');
+  const user=getUsers().find(u=>u.login===login&&u.senha===senha);
+  if(!user){err.textContent='Login ou senha incorretos.';return;}
+  if(!user.ativo){err.textContent='Usuário bloqueado. Contate o administrador.';return;}
+  currentUser=user;dbSet(SK.session,user);err.textContent='';
+  if(user.tipo==='admin'){showScreen('screen-admin');adminTab('custom');}
+  else{renderMenu();showScreen('screen-menu');}
+}
+
+function goLogout(){
+  currentUser=null;localStorage.removeItem(SK.session);
+  document.getElementById('login-input').value='';
+  document.getElementById('senha-input').value='';
+  document.getElementById('login-err').textContent='';
+  showScreen('screen-login');
+}
+
+function initAuth(){
+  initDB();
+  // Check guest link first
+  const params=new URLSearchParams(location.search);
+  const gParam=params.get('g');
+  if(gParam){handleGuestLink(gParam);return;}
+  const s=dbGet(SK.session,null);
+  if(s){
+    const user=getUsers().find(u=>u.id===s.id);
+    if(user&&user.ativo){currentUser=user;if(user.tipo==='admin'){showScreen('screen-admin');adminTab('custom');}else{renderMenu();showScreen('screen-menu');}return;}
+  }
+  showScreen('screen-login');
+}
+
+// ══ DECK BUILDING ══
+const LEVEL_CFG={
+  n1:{label:'Nível 1',backClass:'cb-n1',nextClass:'next-n1',progClass:'prog-n1',flames:'🔥',bg:'#0B1A3E'},
+  n2:{label:'Nível 2',backClass:'cb-n2',nextClass:'next-n2',progClass:'prog-n2',flames:'🔥🔥',bg:'#071A0D'},
+  n3:{label:'Nível 3',backClass:'cb-n3',nextClass:'next-n3',progClass:'prog-n3',flames:'🔥🔥🔥',bg:'#1E0800'},
+  all:{label:'Todos os Níveis',backClass:'cb-all',nextClass:'next-all',progClass:'prog-all',flames:'🔥🔥🔥',bg:'#0D0820'},
+  joker:{label:'Coringa',backClass:'cb-joker',nextClass:'next-joker',progClass:'prog-joker',flames:'♟',bg:'#2A1C00'},
+  custom:{label:'Personalizadas',backClass:'cb-custom',nextClass:'next-custom',progClass:'prog-custom',flames:'✎',bg:'#1a0a2a'},
+};
+
+// ══ FIREBASE CONFIG ══
+const FB_CONFIG={
+  apiKey:'COLE_AQUI',
+  authDomain:'COLE_AQUI',
+  databaseURL:'COLE_AQUI',
+  projectId:'COLE_AQUI',
+  storageBucket:'COLE_AQUI',
+  messagingSenderId:'COLE_AQUI',
+  appId:'COLE_AQUI'
+};
+let fbDb=null,gameRef=null,fbListenerActive=false;
+let isHost=false,myPlayerName='',_remoteCard=null,_remoteTotalCards=0;
+
+function seededShuffle(arr,seed){
+  const a=[...arr];let s=seed>>>0;
+  for(let i=a.length-1;i>0;i--){s=(Math.imul(1103515245,s)+12345)&0x7fffffff;const j=s%(i+1);[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function shuffle(arr){return seededShuffle(arr,Math.floor(Math.random()*2147483647));}
+
+function getDefaultCards(nivel){
+  const extra=getExtraDefault().filter(c=>c.nivel===nivel&&!c.oculto);
+  return [...BASE_CARDS[nivel].map(c=>({...c,level:nivel,origem:'padrao'})),...extra.map(c=>({...c,level:nivel,origem:'padrao'}))];
+}
+function getUserCards(nivel){
+  if(!currentUser||!isVIP(currentUser))return[];
+  return getCustomCards().filter(c=>c.nivel===nivel&&c.userId===currentUser.id&&!c.desativada).map(c=>({...c,level:nivel,origem:'custom'}));
+}
+
+function buildDeck(m,seed){
+  const sh=seed?((a)=>seededShuffle(a,seed)):shuffle;
+  if(m==='custom'){if(!isVIP(currentUser))return[];return sh(getCustomCards().filter(c=>currentUser&&c.userId===currentUser.id).map(c=>({...c,level:'custom',origem:'custom'})));}
+  if(m==='all'){let all=[];['n1','n2','n3'].forEach(l=>{all.push(...getDefaultCards(l));all.push(...getUserCards(l));});return sh(all);}
+  if(m==='joker'){return sh(BASE_CARDS.joker.map(c=>({...c,level:'joker',origem:'padrao'})));}
+  if(m&&m.startsWith('pack:')){const p=getPacks().find(x=>x.id===m.slice(5));return p?sh(p.cards.map(c=>({...c,level:'pack',origem:'pack'}))):[];}
+  return sh([...getDefaultCards(m),...getUserCards(m)]);
+}
+
+// ══ FIREBASE REALTIME SYNC ══
+function isFirebaseConfigured(){return FB_CONFIG.apiKey&&FB_CONFIG.apiKey!=='COLE_AQUI';}
+
+function initFirebase(){
+  if(fbDb)return true;
+  if(!isFirebaseConfigured()||typeof firebase==='undefined')return false;
+  try{
+    if(!firebase.apps.length)firebase.initializeApp(FB_CONFIG);
+    fbDb=firebase.database();return true;
+  }catch(e){console.error('Firebase erro:',e);return false;}
+}
+
+function getGameId(){return'g'+gameSeed;}
+
+function pushGameState(extra={}){
+  if(!gameRef||!isHost)return;
+  const card=deck[current]||null;
+  gameRef.set({
+    currentCard:card?{tipo:card.tipo,texto:card.texto,isLevelJoker:!!card.isLevelJoker}:null,
+    current,totalCards:deck.length,isFlipped,currentPlayerIdx,
+    players:gamePlayers.map(p=>p.name),mode,
+    jokersHeld:[...jokersHeld],sortearName:null,gameOver:false,
+    hostName:myPlayerName,updatedAt:Date.now(),...extra
+  });
+}
+
+function subscribeToGame(){
+  if(!gameRef||fbListenerActive)return;
+  fbListenerActive=true;
+  gameRef.on('value',snap=>{const st=snap.val();if(st)applyRemoteState(st);});
+}
+
+function applyRemoteState(st){
+  isFlipped=st.isFlipped;
+  currentPlayerIdx=st.currentPlayerIdx;
+  jokersHeld=st.jokersHeld||[];
+  if(!isHost){
+    gamePlayers=(st.players||[]).map(n=>({name:n,joker:false}));
+    mode=st.mode||mode;
+    _remoteCard=st.currentCard;
+    _remoteTotalCards=st.totalCards||0;
+  }
+  if(st.gameOver){showScreen('screen-end');renderEndScreen();return;}
+  if(!document.getElementById('screen-game').classList.contains('active')){
+    document.getElementById('screen-game').style.background=getCfg(st.mode).bg;
+    showScreen('screen-game');
+  }
+  if(!isHost&&st.currentCard){renderBack();renderFront(st.currentCard);}
+  const c3d=document.getElementById('card3d');
+  if(isFlipped){c3d.classList.add('flipped');document.getElementById('tap-hint').style.opacity='0';}
+  else{c3d.classList.remove('flipped');}
+  const cfg=getCfg(st.mode||mode);
+  const tot=isHost?deck.length:_remoteTotalCards;
+  document.getElementById('mode-badge').textContent=cfg.label;
+  document.getElementById('card-counter').textContent=`${st.current+1} / ${tot}`;
+  document.getElementById('progress-fill').className=`progress-fill ${cfg.progClass}`;
+  document.getElementById('progress-fill').style.width=(tot?((st.current+1)/tot*100).toFixed(0):0)+'%';
+  document.getElementById('next-btn').className=`next-btn ${cfg.nextClass}`;
+  const bar=document.getElementById('turn-bar');
+  if(gamePlayers.length>0){bar.style.display='flex';document.getElementById('turn-name').textContent=gamePlayers[st.currentPlayerIdx]?.name||'';}
+  else bar.style.display='none';
+  if(st.sortearName&&st.isFlipped){
+    const textEl=document.querySelector('.front-texto');
+    if(textEl)textEl.innerHTML=textEl.innerHTML.replace(/jogador que for sorteado/gi,`<span class="drawn-name">${st.sortearName}</span>`);
+  }
+  renderJokersStrip();
+  applyGuestRestrictions();
+}
+
+function applyGuestRestrictions(){
+  if(isHost)return;
+  const isMyTurn=gamePlayers[currentPlayerIdx]?.name===myPlayerName;
+  document.getElementById('next-btn').style.display='none';
+  document.querySelector('.skip-btn').style.display='none';
+  document.querySelector('.shuffle-btn').style.display='none';
+  document.getElementById('sortear-bar').style.display='none';
+  document.getElementById('jokers-strip').innerHTML='';
+  const banner=document.getElementById('guest-banner');
+  banner.style.display='block';
+  document.getElementById('guest-banner-name').textContent=myPlayerName;
+  banner.className='guest-banner'+(isMyTurn?' my-turn':'');
+  const hint=document.getElementById('tap-hint');
+  if(!isFlipped&&isMyTurn){hint.textContent='Toque para revelar';hint.style.opacity='1';}
+  else if(!isFlipped){hint.textContent='Aguardando sua vez...';hint.style.opacity='.5';}
+  else{hint.style.opacity='0';}
+}
+
+// ══ PLAYERS SYSTEM ══
+let gamePlayers=[];      // [{name,joker:false}]
+let currentPlayerIdx=0;
+let gameMode='n1';
+let gameSeed=0;
+
+function openPlayerSetup(mode){
+  gameMode=mode;
+  gamePlayers=[];
+  if(currentUser&&currentUser.tipo!=='guest'&&currentUser.id){
+    gamePlayers.push({name:currentUser.nome||currentUser.login,joker:false});
+  }
+  document.getElementById('ps-input').value='';
+  document.getElementById('sortear-result').style.display='none';
+  document.getElementById('share-section').style.display='none';
+  document.getElementById('ps-start-btn').disabled=true;
+  document.getElementById('ps-sortear-btn').disabled=true;
+  sortedStarterIdx=-1;
+  renderPlayersList();
+  showScreen('screen-players');
+}
+
+function addPlayer(){
+  const inp=document.getElementById('ps-input');
+  const name=inp.value.trim();
+  if(!name)return;
+  if(gamePlayers.find(p=>p.name.toLowerCase()===name.toLowerCase())){alert('Nome já adicionado.');return;}
+  if(gamePlayers.length>=10){alert('Máximo de 10 jogadores.');return;}
+  gamePlayers.push({name,joker:false});
+  inp.value='';renderPlayersList();
+}
+
+function removePlayer(idx){gamePlayers.splice(idx,1);renderPlayersList();}
+
+function renderPlayersList(){
+  const list=document.getElementById('players-list');
+  if(!gamePlayers.length){list.innerHTML='<div style="color:var(--txt2);font-size:13px;text-align:center;padding:12px">Adicione pelo menos 1 jogador para sortear o início.</div>';return;}
+  list.innerHTML=gamePlayers.map((p,i)=>`
+    <div class="player-item" id="pi-${i}">
+      <div class="player-avatar">${p.name[0].toUpperCase()}</div>
+      <div class="player-name-txt">${p.name}</div>
+      <button class="btn btn-sm btn-danger" onclick="removePlayer(${i})">✕</button>
+    </div>`).join('');
+}
+
+let sortedStarterIdx=-1;
+function sortearInicio(){
+  if(!gamePlayers.length){alert('Adicione jogadores primeiro.');return;}
+  // animate
+  let spins=0,total=15;
+  const interval=setInterval(()=>{
+    const idx=Math.floor(Math.random()*gamePlayers.length);
+    document.querySelectorAll('.player-item').forEach((el,i)=>{
+      el.classList.toggle('sortear-winner',i===idx);
+    });
+    spins++;
+    if(spins>=total){
+      clearInterval(interval);
+      sortedStarterIdx=idx;
+      document.getElementById('sortear-result').style.display='block';
+      document.getElementById('sortear-result').textContent=`🎉 ${gamePlayers[idx].name} começa o jogo!`;
+      document.getElementById('ps-start-btn').disabled=false;
+    }
+  },80);
+}
+
+// ══ SHARE LINK ══
+let shareGameConfig=null;
+function generateShareLink(){
+  if(!gamePlayers.length){alert('Adicione jogadores primeiro.');return;}
+  gameSeed=Math.floor(Math.random()*2147483647);
+  const config={
+    mode:gameMode,
+    players:gamePlayers.map(p=>p.name),
+    seed:gameSeed,
+    starter:sortedStarterIdx>=0?sortedStarterIdx:0,
+    expiresAt:Date.now()+3600000
+  };
+  shareGameConfig=config;
+  const encoded=btoa(JSON.stringify(config));
+  const url=location.origin+location.pathname+'?g='+encoded;
+  document.getElementById('share-link-txt').textContent=url;
+  document.getElementById('share-section').style.display='block';
+  document.getElementById('ps-sortear-btn').disabled=false;
+  window._shareUrl=url;
+}
+
+function shareLink(){
+  const url=window._shareUrl||'';
+  if(!url)return;
+  // 1ª opção: tela nativa de compartilhamento (requer HTTPS)
+  if(navigator.share){
+    navigator.share({title:'3ÉPAR — Jogo de Cartas',text:'Compartilhe esse link com os jogadores para que cada um possa jogar pelo próprio celular',url})
+      .catch(()=>_copyFallback(url));
+    return;
+  }
+  _copyFallback(url);
+}
+function _copyFallback(url){
+  // 2ª opção: Clipboard API (requer HTTPS)
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(()=>alert('Link copiado!')).catch(()=>_execCopy(url));
+    return;
+  }
+  _execCopy(url);
+}
+function _execCopy(url){
+  // 3ª opção: execCommand — funciona sem HTTPS
+  try{
+    const ta=document.createElement('textarea');
+    ta.value=url;ta.style.cssText='position:fixed;opacity:0;top:0;left:0';
+    document.body.appendChild(ta);ta.focus();ta.select();
+    const ok=document.execCommand('copy');
+    document.body.removeChild(ta);
+    if(ok){alert('Link copiado!');return;}
+  }catch(e){}
+  // 4ª opção: prompt manual (funciona sempre)
+  prompt('Copie o link abaixo:',url);
+}
+
+function handleGuestLink(encoded){
+  try{
+    const config=JSON.parse(atob(encoded));
+    if(Date.now()>config.expiresAt){showScreen('screen-guest');document.getElementById('guest-expired').style.display='block';document.getElementById('guest-players-list').style.display='none';return;}
+    showScreen('screen-guest');
+    document.getElementById('guest-title').textContent='Partida de 3ÉPAR!';
+    document.getElementById('guest-sub').textContent='Selecione seu nome para entrar na partida como jogador.';
+    const list=document.getElementById('guest-players-list');
+    list.innerHTML=config.players.map(name=>`
+      <button class="guest-player-btn" onclick="joinAsGuest('${name.replace(/'/g,"\\'")}',${JSON.stringify(config).replace(/</g,'\\u003c')})">
+        ${name}
+      </button>`).join('');
+  }catch(e){showScreen('screen-login');}
+}
+
+function joinAsGuest(myName,config){
+  currentUser={id:0,login:myName,nome:myName,tipo:'guest',ativo:true};
+  gamePlayers=config.players.map(n=>({name:n,joker:false}));
+  gameSeed=config.seed;gameMode=config.mode;mode=config.mode;
+  currentPlayerIdx=config.starter||0;
+  isHost=false;myPlayerName=myName;
+  if(initFirebase()){
+    if(gameRef&&fbListenerActive){gameRef.off();fbListenerActive=false;}
+    gameRef=fbDb.ref('games/g'+config.seed);
+    document.getElementById('screen-game').style.background=getCfg(config.mode).bg;
+    showScreen('screen-game');renderBack();
+    document.getElementById('tap-hint').textContent='Conectando à partida...';
+    document.getElementById('tap-hint').style.opacity='.6';
+    subscribeToGame();
+  }else{
+    // Firebase não configurado — modo local de fallback
+    isHost=true;
+    startGameWithPlayers(config.mode,gamePlayers,config.seed,config.starter);
+  }
+}
+
+// ══ BEGIN GAME ══
+function beginGame(){
+  if(sortedStarterIdx>=0) currentPlayerIdx=sortedStarterIdx;
+  else currentPlayerIdx=0;
+  startGameWithPlayers(gameMode,gamePlayers,gameSeed||Math.floor(Math.random()*2147483647),currentPlayerIdx);
+}
+
+let deck=[],current=0,mode='n1',isFlipped=false;
+let jokersHeld=[];  // [{playerIdx, playerName}]
+
+function startGameWithPlayers(m,players,seed,starterIdx){
+  mode=m; gamePlayers=[...players]; currentPlayerIdx=starterIdx||0;
+  jokersHeld=[];gameSeed=seed;
+  deck=buildDeck(m,seed);
+  if(!deck.length){alert('Sem cartas disponíveis.');return;}
+  current=0;isFlipped=false;
+  isHost=true;myPlayerName=gamePlayers[currentPlayerIdx]?.name||'';
+  document.getElementById('guest-banner').style.display='none';
+  const cfg=getCfg(m);
+  document.getElementById('screen-game').style.background=cfg.bg;
+  showScreen('screen-game');
+  renderBack();renderFront(deck[0]);updateGameUI();
+  document.getElementById('card3d').classList.remove('flipped');
+  document.getElementById('tap-hint').style.opacity='1';
+  resetSortearChip();triggerCardAnim();
+  if(initFirebase()){
+    if(gameRef&&fbListenerActive){gameRef.off();fbListenerActive=false;}
+    gameRef=fbDb.ref('games/'+getGameId());
+    pushGameState();subscribeToGame();
+  }
+}
+
+// Start without players (from admin or direct)
+function startGame(m){
+  gameMode=m;gamePlayers=[];currentPlayerIdx=0;jokersHeld=[];
+  deck=buildDeck(m);
+  if(!deck.length){alert('Sem cartas disponíveis.');return;}
+  current=0;isFlipped=false;
+  const cfg=getCfg(m);
+  document.getElementById('screen-game').style.background=cfg.bg;
+  showScreen('screen-game');
+  renderBack();renderFront(deck[0]);updateGameUI();
+  document.getElementById('card3d').classList.remove('flipped');
+  document.getElementById('tap-hint').style.opacity='1';
+  resetSortearChip();
+  triggerCardAnim();
+}
+
+// ══ MENU ══
+function tryLevel(lvl){
+  if(!currentUser)return;
+  const prog=getProgress(currentUser.id);
+  if(!prog[lvl]){
+    const prev={n2:'Nível 1',n3:'Nível 2'};
+    alert(`🔒 Complete o ${prev[lvl]} primeiro para desbloquear este nível!`);
+    return;
+  }
+  openPlayerSetup(lvl);
+}
+
+function renderMenu(){
+  if(!currentUser)return;
+  document.getElementById('menu-avatar').textContent=(currentUser.nome||currentUser.login)[0].toUpperCase();
+  document.getElementById('menu-username').textContent=currentUser.nome||currentUser.login;
+  document.getElementById('menu-usertype').textContent=currentUser.tipo.toUpperCase();
+  ['n1','n2','n3'].forEach(l=>{
+    const total=getDefaultCards(l).length+getUserCards(l).length;
+    document.getElementById('count-'+l).textContent=total+' cartas';
+  });
+  // VIP-only features
+  document.getElementById('my-cards-btn').style.display=isVIP(currentUser)?'flex':'none';
+
+  // Level locks
+  const prog=getProgress(currentUser.id);
+  ['n2','n3'].forEach(l=>{
+    const btn=document.getElementById('btn-'+l);
+    const lock=document.getElementById('lock-'+l);
+    if(prog[l]){btn.classList.remove('locked');if(lock)lock.style.display='none';}
+    else{btn.classList.add('locked');if(lock)lock.style.display='block';}
+  });
+  // Packs
+  const packs=getPacks().filter(p=>p.ativo);
+  const sec=document.getElementById('packs-section');
+  if(packs.length){
+    sec.style.display='block';
+    document.getElementById('packs-list').innerHTML=packs.map(p=>`
+      <button class="pack-btn" onclick="openPlayerSetup('pack:${p.id}')">
+        <span>${p.nome} <span class="pack-badge">${p.cards.length} cartas</span></span>
+        <span style="color:rgba(212,175,55,.4);font-size:12px">▶</span>
+      </button>`).join('');
+  }else sec.style.display='none';
+}
+
+// ══ GAME RENDER ══
+function getCfg(m){
+  if(m&&m.startsWith('pack:'))return{label:'Pack',backClass:'cb-pack',nextClass:'next-pack',progClass:'prog-pack',flames:'📦',bg:'#001a2a'};
+  return LEVEL_CFG[m]||LEVEL_CFG.n1;
+}
+
+function cardIcon(card){
+  if(card.tipo==='Coringa')return'espada.png';
+  if(card.tipo==='Desafio')return'abacaxi.png';
+  return'borboleta.png';
+}
+
+function renderBack(){
+  const cfg=getCfg(mode);
+  const back=document.getElementById('card-back-face');
+  back.className=`card-face card-back ${cfg.backClass}`;
+  back.innerHTML=`<div class="back-glow"></div><div class="back-inner">
+    <img src="logo.png" style="width:min(54vw,195px);height:auto" alt="3ÉPAR"/>
+    <div class="back-flames">${cfg.flames}</div>
+  </div>`;
+}
+
+function renderFront(card){
+  const icon=cardIcon(card);
+  document.getElementById('card-front-face').innerHTML=`
+    <svg class="crnr tl" viewBox="0 0 18 18"><use href="#corner"/></svg>
+    <svg class="crnr tr" viewBox="0 0 18 18"><use href="#corner"/></svg>
+    <svg class="crnr bl" viewBox="0 0 18 18"><use href="#corner"/></svg>
+    <svg class="crnr br" viewBox="0 0 18 18"><use href="#corner"/></svg>
+    <div class="front-tipo">${card.tipo}</div>
+    <div class="front-icon"><img src="${icon}" alt="" draggable="false"/></div>
+    <div class="front-hr"></div>
+    <div class="front-texto">${card.texto}</div>`;
+}
+
+function updateGameUI(){
+  const cfg=getCfg(mode);
+  document.getElementById('mode-badge').textContent=cfg.label;
+  document.getElementById('card-counter').textContent=`${current+1} / ${deck.length}`;
+  document.getElementById('progress-fill').className=`progress-fill ${cfg.progClass}`;
+  document.getElementById('progress-fill').style.width=((current+1)/deck.length*100).toFixed(0)+'%';
+  document.getElementById('next-btn').className=`next-btn ${cfg.nextClass}`;
+
+  // Turn bar
+  const bar=document.getElementById('turn-bar');
+  if(gamePlayers.length>0){
+    bar.style.display='flex';
+    document.getElementById('turn-name').textContent=gamePlayers[currentPlayerIdx]?.name||'';
+  }else bar.style.display='none';
+
+  // Sortear bar (show for Desafio/Pergunta cards that need interaction)
+  const card=deck[current];
+  const needsSortear=card&&(card.tipo==='Desafio'||card.tipo==='Pergunta')&&gamePlayers.length>1&&card.texto.includes('sorteado');
+  document.getElementById('sortear-bar').style.display=(gamePlayers.length>1&&isFlipped&&card&&card.tipo!=='Coringa')?'flex':'none';
+
+  // Jokers strip
+  renderJokersStrip();
+}
+
+function renderJokersStrip(){
+  const strip=document.getElementById('jokers-strip');
+  if(!jokersHeld.length){strip.innerHTML='';return;}
+  strip.innerHTML=jokersHeld.map((j,i)=>`
+    <div class="joker-chip" onclick="useJoker(${i})" title="Clique para usar o Coringa">
+      🃏 ${j.playerName} — Usar Coringa
+    </div>`).join('');
+}
+
+// ══ FLIP + NEXT ══
+function flipCard(){
+  if(isFlipped){if(isHost)nextCard();return;}
+  if(!isHost){
+    if(gamePlayers[currentPlayerIdx]?.name!==myPlayerName)return;
+  }
+  isFlipped=true;
+  document.getElementById('card3d').classList.add('flipped');
+  document.getElementById('tap-hint').style.opacity='0';
+  const card=isHost?deck[current]:_remoteCard;
+  if(card&&card.tipo==='Coringa'&&card.isLevelJoker){
+    const playerName=gamePlayers[currentPlayerIdx]?.name||'Jogador';
+    jokersHeld.push({playerIdx:currentPlayerIdx,playerName});
+    if(isHost)renderJokersStrip();
+  }
+  const needsSortear=card&&gamePlayers.length>1&&card.tipo!=='Coringa';
+  document.getElementById('sortear-bar').style.display=(needsSortear&&isHost)?'flex':'none';
+  if(gameRef){
+    const upd={isFlipped:true};
+    if(card&&card.tipo==='Coringa'&&card.isLevelJoker)upd.jokersHeld=jokersHeld;
+    gameRef.update(upd);
+  }
+}
+
+function useJoker(jokerIdx){
+  if(!isHost)return;
+  if(!confirm(`${jokersHeld[jokerIdx].playerName} vai usar o Coringa para trocar a carta atual?`))return;
+  jokersHeld.splice(jokerIdx,1);
+  // Swap current card: remove it and insert a new random non-joker card from same level
+  const lvl=deck[current].level||mode;
+  const pool=getDefaultCards(lvl==='all'||lvl==='custom'||lvl==='pack'?'n1':lvl).filter(c=>c.tipo!=='Coringa');
+  if(pool.length){
+    const replacement={...pool[Math.floor(Math.random()*pool.length)],level:lvl,origem:'padrao'};
+    deck[current]=replacement;
+  }
+  isFlipped=false;
+  const c=document.getElementById('card3d');
+  c.style.transition='none';c.classList.remove('flipped');void c.offsetWidth;c.style.transition='';
+  renderFront(deck[current]);updateGameUI();
+  document.getElementById('tap-hint').style.opacity='1';
+  resetSortearChip();
+  renderJokersStrip();
+  pushGameState();
+}
+
+function nextCard(){
+  if(!isHost)return;
+  if(current>=deck.length-1&&currentUser&&currentUser.id){
+    const lvlMap={n1:'n1',n2:'n2',n3:'n3'};
+    if(lvlMap[mode])setLevelDone(currentUser.id,mode);
+  }
+  current++;
+  if(current>=deck.length){
+    if(gameRef)gameRef.update({gameOver:true});
+    showScreen('screen-end');renderEndScreen();return;
+  }
+  isFlipped=false;
+  if(gamePlayers.length>0)currentPlayerIdx=(currentPlayerIdx+1)%gamePlayers.length;
+  const c=document.getElementById('card3d');
+  c.style.transition='none';c.classList.remove('flipped');void c.offsetWidth;c.style.transition='';
+  renderFront(deck[current]);updateGameUI();
+  document.getElementById('tap-hint').style.opacity='1';
+  resetSortearChip();
+  document.getElementById('sortear-bar').style.display='none';
+  triggerCardAnim();
+  pushGameState();
+}
+
+function renderEndScreen(){
+  const ep=document.getElementById('end-players');
+  if(gamePlayers.length>0)ep.textContent='Jogadores: '+gamePlayers.map(p=>p.name).join(', ');
+  else ep.textContent='';
+}
+
+function shuffleDeck(){
+  deck=buildDeck(mode);current=0;isFlipped=false;jokersHeld=[];
+  const c=document.getElementById('card3d');
+  c.style.transition='none';c.classList.remove('flipped');void c.offsetWidth;c.style.transition='';
+  renderFront(deck[0]);updateGameUI();resetSortearChip();
+  document.getElementById('tap-hint').style.opacity='1';
+  document.getElementById('sortear-bar').style.display='none';
+  triggerCardAnim();
+}
+
+// ══ SORTEAR PARCEIRO ══
+function resetSortearChip(){
+  const chip=document.getElementById('sortear-chip');
+  chip.style.display='none';chip.textContent='';
+}
+
+function sortearParceiro(){
+  if(!isHost||gamePlayers.length<2)return;
+  const others=gamePlayers.filter((_,i)=>i!==currentPlayerIdx);
+  const drawn=others[Math.floor(Math.random()*others.length)];
+  const chip=document.getElementById('sortear-chip');
+  chip.style.display='flex';chip.innerHTML=`🎯 <strong>${drawn.name}</strong>`;
+  const textEl=document.querySelector('.front-texto');
+  if(textEl)textEl.innerHTML=textEl.innerHTML.replace(/jogador que for sorteado/gi,`<span class="drawn-name">${drawn.name}</span>`);
+  if(gameRef)gameRef.update({sortearName:drawn.name});
+}
+
+function triggerCardAnim(){
+  const w=document.getElementById('card-wrap');
+  w.style.animation='none';void w.offsetWidth;w.style.animation='cardIn .38s ease forwards';
+}
+function restartGame(){
+  if(gameRef&&fbListenerActive){gameRef.off();fbListenerActive=false;gameRef=null;}
+  startGameWithPlayers(mode,gamePlayers,Math.floor(Math.random()*2147483647),0);
+}
+function goMenu(){
+  if(gameRef&&fbListenerActive){gameRef.off();fbListenerActive=false;gameRef=null;}
+  isHost=false;document.getElementById('guest-banner').style.display='none';
+  renderMenu();showScreen('screen-menu');
+}
+
+// ══ MY CARDS ══
+let editingCardId=null;
+function renderMyCards(){
+  const mine=getCustomCards().filter(c=>c.userId===currentUser.id);
+  const list=document.getElementById('my-cards-list');
+  const subTitle=document.querySelector('#screen-my-cards .sub-title');
+  if(subTitle)subTitle.textContent=`Minhas Cartas (${mine.length}/10)`;
+  if(!mine.length){list.innerHTML='<div class="empty-state">Sem cartas personalizadas ainda.<br>Toque em <b>+ Adicionar</b> para criar.</div>';return;}
+  list.innerHTML=mine.map(c=>`<div class="card-item${c.desativada?' disabled':''}">
+    <div class="card-item-meta">
+      <div class="card-item-tipo">${c.tipo}${c.desativada?'<span class="disabled-badge">● desativada</span>':''}</div>
+      <div class="card-item-texto">${c.texto}</div>
+      <div class="card-item-nivel">Nível ${c.nivel.toUpperCase()}</div>
+    </div>
+    <div class="card-item-actions">
+      <button class="btn btn-sm btn-outline" onclick="openCardModal('${c.id}')">✎</button>
+      <button class="btn btn-sm ${c.desativada?'btn-success':'btn-danger'}" onclick="toggleMyCard('${c.id}')">${c.desativada?'Ativar':'Desativar'}</button>
+    </div>
+  </div>`).join('');
+}
+
+function toggleMyCard(id){
+  const cards=getCustomCards();
+  const i=cards.findIndex(c=>c.id===id);
+  if(i>-1)cards[i].desativada=!cards[i].desativada;
+  saveCustomCards(cards);renderMyCards();
+}
+
+function openCardModal(id){
+  editingCardId=id||null;
+  const card=id?getCustomCards().find(c=>c.id===id):null;
+  openModal(`<div class="modal-title">${id?'Editar Carta':'Nova Carta Personalizada'}</div>
+    <div class="field"><label>Nível</label><select id="m-nivel">
+      <option value="n1" ${card?.nivel==='n1'?'selected':''}>Nível 1 — Aquecimento</option>
+      <option value="n2" ${card?.nivel==='n2'?'selected':''}>Nível 2 — Ousadia</option>
+      <option value="n3" ${card?.nivel==='n3'?'selected':''}>Nível 3 — Proibido</option>
+    </select></div>
+    <div class="field"><label>Tipo</label><select id="m-tipo">
+      <option value="Desafio" ${card?.tipo==='Desafio'?'selected':''}>Desafio</option>
+      <option value="Pergunta" ${card?.tipo==='Pergunta'?'selected':''}>Pergunta</option>
+    </select></div>
+    <div class="field"><label>Texto da Carta</label><textarea id="m-texto" placeholder="...">${card?card.texto:''}</textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-gold" style="flex:1" onclick="saveMyCard()">Salvar</button>
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+    </div>`);
+}
+
+function saveMyCard(){
+  const nivel=document.getElementById('m-nivel').value;
+  const tipo=document.getElementById('m-tipo').value;
+  const texto=document.getElementById('m-texto').value.trim();
+  if(!texto){alert('Digite o texto.');return;}
+  const cards=getCustomCards();
+  if(editingCardId){const i=cards.findIndex(c=>c.id===editingCardId);if(i>-1){cards[i].nivel=nivel;cards[i].tipo=tipo;cards[i].texto=texto;}}
+  else{
+    const mine=cards.filter(c=>c.userId===currentUser.id);
+    if(mine.length>=10){alert('Limite de 10 cartas personalizadas atingido.');return;}
+    cards.push({id:'c'+Date.now(),userId:currentUser.id,nivel,tipo,texto,criadoEm:Date.now()});
+  }
+  saveCustomCards(cards);closeModal();renderMyCards();
+}
+function deleteMyCard(id){if(!confirm('Excluir?'))return;saveCustomCards(getCustomCards().filter(c=>c.id!==id));renderMyCards();}
+
+// ══ ADMIN ══
+let adminNivelFilter='n1';
+function adminTab(tab){
+  document.querySelectorAll('.atab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+  ({custom:renderAdminCustom,default:renderAdminDefault,packs:renderAdminPacks,users:renderAdminUsers})[tab]?.();
+}
+
+function renderAdminCustom(){
+  const all=getCustomCards(),users=getUsers();
+  const content=document.getElementById('admin-content');
+  if(!all.length){content.innerHTML='<div class="section-title">Cartas Personalizadas</div><div class="section-subtitle">Nenhuma carta criada ainda pelos usuários.</div>';return;}
+  const byUser={};
+  all.forEach(c=>{const u=users.find(u=>u.id===c.userId);const k=u?u.login:'?';if(!byUser[k])byUser[k]=[];byUser[k].push(c);});
+  content.innerHTML=`<div class="section-title">Cartas Personalizadas</div><div class="section-subtitle">Use como inspiração para novas cartas padrão.</div>`+
+    Object.entries(byUser).map(([login,cards])=>`<div class="custom-group">
+      <div class="custom-group-title">@${login} — ${cards.length} carta(s)</div>
+      ${cards.map(c=>`<div class="custom-card-row">
+        <div class="custom-card-tipo">${c.tipo}</div>
+        <div class="custom-card-text">${c.texto}</div>
+        <div class="custom-card-footer">
+          <span class="custom-card-nivel">Nível ${c.nivel.toUpperCase()}</span>
+          <button class="btn btn-sm btn-success" onclick="promoteToDefault('${c.id}')">+ Promover a Padrão</button>
+        </div>
+      </div>`).join('')}
+    </div>`).join('');
+}
+
+function promoteToDefault(id){
+  const card=getCustomCards().find(c=>c.id===id);if(!card)return;
+  const extra=getExtraDefault();
+  extra.push({id:'d'+Date.now(),nivel:card.nivel,tipo:card.tipo,texto:card.texto,oculto:false,criadoEm:Date.now()});
+  saveExtraDefault(extra);alert('Promovida a padrão!');renderAdminCustom();
+}
+
+function renderAdminDefault(){
+  const extra=getExtraDefault();
+  const allByLevel={
+    n1:[...BASE_CARDS.n1.map((c,i)=>({...c,id:'base-n1-'+i,origem:'base'})),...extra.filter(c=>c.nivel==='n1')],
+    n2:[...BASE_CARDS.n2.map((c,i)=>({...c,id:'base-n2-'+i,origem:'base'})),...extra.filter(c=>c.nivel==='n2')],
+    n3:[...BASE_CARDS.n3.map((c,i)=>({...c,id:'base-n3-'+i,origem:'base'})),...extra.filter(c=>c.nivel==='n3')],
+  };
+  const cards=allByLevel[adminNivelFilter]||[];
+  document.getElementById('admin-content').innerHTML=`
+    <div class="section-title">Cartas Padrão</div>
+    <div class="nivel-tabs">${['n1','n2','n3'].map(l=>`<button class="nivel-tab ${adminNivelFilter===l?'active':''}" onclick="adminNivelFilter='${l}';renderAdminDefault()">Nível ${l.toUpperCase()}</button>`).join('')}</div>
+    <button class="btn btn-gold btn-full" style="margin-bottom:14px" onclick="openAdminDefaultModal()">+ Nova Carta Padrão</button>
+    ${cards.map(c=>`<div class="default-card-row">
+      <div class="default-card-info">
+        <div class="custom-card-tipo">${c.tipo}</div>
+        <div style="font-size:13px;color:var(--txt);line-height:1.4">${c.texto}</div>
+        ${c.oculto?'<div style="font-size:10px;color:var(--danger);margin-top:4px">● Oculta</div>':''}
+      </div>
+      <div class="default-card-actions">
+        ${c.origem!=='base'?`<button class="btn btn-sm btn-outline" onclick="openAdminDefaultModal('${c.id}')">✎</button>
+        <button class="btn btn-sm btn-danger" onclick="toggleDefaultCard('${c.id}')">${c.oculto?'Mostrar':'Ocultar'}</button>`:'<span style="font-size:10px;color:var(--txt2)">Base</span>'}
+      </div>
+    </div>`).join('')}`;
+}
+
+function openAdminDefaultModal(id){
+  const card=id?getExtraDefault().find(c=>c.id===id):null;
+  openModal(`<div class="modal-title">${id?'Editar':'Nova'} Carta Padrão</div>
+    <div class="field"><label>Nível</label><select id="ad-nivel">
+      ${['n1','n2','n3'].map(l=>`<option value="${l}" ${card?.nivel===l?'selected':l===adminNivelFilter&&!card?'selected':''}>Nível ${l.toUpperCase()}</option>`).join('')}
+    </select></div>
+    <div class="field"><label>Tipo</label><select id="ad-tipo">
+      <option value="Desafio" ${card?.tipo==='Desafio'?'selected':''}>Desafio</option>
+      <option value="Pergunta" ${card?.tipo==='Pergunta'?'selected':''}>Pergunta</option>
+    </select></div>
+    <div class="field"><label>Texto</label><textarea id="ad-texto">${card?card.texto:''}</textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-gold" style="flex:1" onclick="saveAdminDefault('${id||''}')">Salvar</button>
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+    </div>`);
+}
+function saveAdminDefault(id){
+  const nivel=document.getElementById('ad-nivel').value,tipo=document.getElementById('ad-tipo').value,texto=document.getElementById('ad-texto').value.trim();
+  if(!texto){alert('Digite o texto.');return;}
+  const extra=getExtraDefault();
+  if(id){const i=extra.findIndex(c=>c.id===id);if(i>-1){extra[i].nivel=nivel;extra[i].tipo=tipo;extra[i].texto=texto;}}
+  else extra.push({id:'d'+Date.now(),nivel,tipo,texto,oculto:false,criadoEm:Date.now()});
+  saveExtraDefault(extra);closeModal();renderAdminDefault();
+}
+function toggleDefaultCard(id){const extra=getExtraDefault();const i=extra.findIndex(c=>c.id===id);if(i>-1){extra[i].oculto=!extra[i].oculto;saveExtraDefault(extra);}renderAdminDefault();}
+
+function renderAdminPacks(){
+  const packs=getPacks();
+  document.getElementById('admin-content').innerHTML=`
+    <div class="section-title">Packs de Cartas</div>
+    <div class="section-subtitle">Crie extensões do jogo para usuários VIP.</div>
+    <button class="btn btn-gold btn-full" style="margin-bottom:16px" onclick="openPackModal()">+ Criar Novo Pack</button>
+    ${packs.length?packs.map(p=>`<div class="pack-row">
+      <div class="pack-row-header">
+        <div><div class="pack-row-name">${p.nome}</div>
+          <div class="pack-row-meta">${p.cards.length} cartas • ${p.ativo?'<span style="color:var(--success)">Ativo</span>':'<span style="color:var(--danger)">Inativo</span>'}</div>
+        </div>
+        <div class="pack-row-actions">
+          <button class="btn btn-sm btn-outline" onclick="openPackModal('${p.id}')">✎</button>
+          <button class="btn btn-sm btn-danger" onclick="togglePack('${p.id}')">${p.ativo?'Desativar':'Ativar'}</button>
+        </div>
+      </div>
+      ${p.descricao?`<div style="font-size:12px;color:var(--txt2)">${p.descricao}</div>`:''}
+    </div>`).join(''):'<div class="empty-state">Nenhum pack criado ainda.</div>'}`;
+}
+
+function openPackModal(id){
+  const pack=id?getPacks().find(p=>p.id===id):null;
+  window._packCards=pack?[...pack.cards]:[];
+  openModal(`<div class="modal-title">${id?'Editar Pack':'Novo Pack'}</div>
+    <div class="field"><label>Nome</label><input type="text" id="pk-nome" value="${pack?pack.nome:''}"/></div>
+    <div class="field"><label>Descrição</label><input type="text" id="pk-desc" value="${pack?pack.descricao||'':''}"/></div>
+    <div style="font-size:11px;color:var(--gold-d);margin-bottom:8px">Cartas (${window._packCards.length})</div>
+    <div id="pk-cards-list" style="max-height:160px;overflow-y:auto;margin-bottom:10px">
+      ${window._packCards.map((c,i)=>`<div class="custom-card-row" style="margin-bottom:6px">
+        <div class="custom-card-tipo">${c.tipo}</div>
+        <div class="custom-card-text">${c.texto}</div>
+        <button class="btn btn-sm btn-danger" style="margin-top:6px" onclick="removePackCard(${i},'${id||''}')">Remover</button>
+      </div>`).join('')||'<div style="color:var(--txt2);font-size:12px;padding:8px 0">Nenhuma carta</div>'}
+    </div>
+    <button class="btn btn-outline btn-full btn-sm" style="margin-bottom:10px" onclick="addPackCard('${id||''}')">+ Adicionar Carta</button>
+    <div class="modal-actions">
+      <button class="btn btn-gold" style="flex:1" onclick="savePack('${id||''}')">Salvar Pack</button>
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+    </div>`);
+}
+function addPackCard(packId){
+  openModal(`<div class="modal-title">Adicionar Carta ao Pack</div>
+    <div class="field"><label>Nível</label><select id="pkc-nivel"><option value="n1">Nível 1</option><option value="n2">Nível 2</option><option value="n3">Nível 3</option></select></div>
+    <div class="field"><label>Tipo</label><select id="pkc-tipo"><option>Desafio</option><option>Pergunta</option></select></div>
+    <div class="field"><label>Texto</label><textarea id="pkc-texto"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-gold" style="flex:1" onclick="confirmAddPackCard('${packId}')">Adicionar</button>
+      <button class="btn btn-outline" onclick="openPackModal('${packId}')">Voltar</button>
+    </div>`);
+}
+function confirmAddPackCard(packId){
+  const nivel=document.getElementById('pkc-nivel').value,tipo=document.getElementById('pkc-tipo').value,texto=document.getElementById('pkc-texto').value.trim();
+  if(!texto){alert('Digite o texto.');return;}
+  if(!window._packCards)window._packCards=[];
+  window._packCards.push({nivel,tipo,texto});openPackModal(packId);
+}
+function removePackCard(idx,packId){window._packCards?.splice(idx,1);openPackModal(packId);}
+function savePack(id){
+  const nome=document.getElementById('pk-nome').value.trim(),descricao=document.getElementById('pk-desc').value.trim();
+  if(!nome){alert('Nome obrigatório.');return;}
+  const packs=getPacks();
+  if(id){const i=packs.findIndex(p=>p.id===id);if(i>-1){packs[i].nome=nome;packs[i].descricao=descricao;packs[i].cards=window._packCards||[];}}
+  else packs.push({id:'pk'+Date.now(),nome,descricao,cards:window._packCards||[],ativo:true,criadoEm:Date.now()});
+  savePacks(packs);window._packCards=null;closeModal();renderAdminPacks();
+}
+function togglePack(id){const packs=getPacks();const i=packs.findIndex(p=>p.id===id);if(i>-1){packs[i].ativo=!packs[i].ativo;savePacks(packs);}renderAdminPacks();}
+
+function renderAdminUsers(){
+  const users=getUsers();
+  document.getElementById('admin-content').innerHTML=`
+    <div class="section-title">Usuários</div>
+    <button class="btn btn-gold btn-full" style="margin-bottom:16px" onclick="openUserModal()">+ Criar Usuário</button>
+    ${users.map(u=>`<div class="user-row">
+      <div class="user-row-top">
+        <div><span class="user-row-login">${u.login}</span>${!u.ativo?'<span class="blocked-badge" style="margin-left:8px">Bloqueado</span>':''}</div>
+        <span class="user-row-type type-${u.tipo}">${u.tipo.toUpperCase()}</span>
+      </div>
+      <div class="user-row-info">${u.nome||''}</div>
+      ${u.tipo!=='admin'?`<div class="user-row-actions">
+        ${u.tipo==='promo'?`<button class="btn btn-sm btn-success" onclick="setUserType(${u.id},'vip')">↑ VIP</button>`:''}
+        ${u.tipo==='vip'?`<button class="btn btn-sm btn-outline" onclick="setUserType(${u.id},'promo')">↓ Promo</button>`:''}
+        <button class="btn btn-sm ${u.ativo?'btn-danger':'btn-success'}" onclick="toggleUserBlock(${u.id})">${u.ativo?'Bloquear':'Desbloquear'}</button>
+        <button class="btn btn-sm btn-outline" onclick="openUserModal(${u.id})">✎</button>
+      </div>`:'<div style="font-size:11px;color:var(--txt2)">Conta de administrador</div>'}
+    </div>`).join('')}`;
+}
+function openUserModal(id){
+  const user=id?getUsers().find(u=>u.id===id):null;
+  openModal(`<div class="modal-title">${id?'Editar Usuário':'Novo Usuário'}</div>
+    <div class="field"><label>Login</label><input type="text" id="u-login" value="${user?user.login:''}" placeholder="login"/></div>
+    <div class="field"><label>Nome</label><input type="text" id="u-nome" value="${user?user.nome||'':''}" placeholder="Nome"/></div>
+    <div class="field"><label>${id?'Nova Senha (em branco = sem alteração)':'Senha'}</label><input type="password" id="u-senha" placeholder="••••••••"/></div>
+    <div class="field"><label>Tipo de Acesso</label><select id="u-tipo">
+      <option value="promo" ${user?.tipo==='promo'?'selected':''}>Promo</option>
+      <option value="vip" ${user?.tipo==='vip'?'selected':''}>VIP</option>
+    </select></div>
+    <div class="modal-actions">
+      <button class="btn btn-gold" style="flex:1" onclick="saveUser(${id||0})">Salvar</button>
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+    </div>`);
+}
+function saveUser(id){
+  const login=document.getElementById('u-login').value.trim(),nome=document.getElementById('u-nome').value.trim();
+  const senha=document.getElementById('u-senha').value,tipo=document.getElementById('u-tipo').value;
+  if(!login){alert('Login obrigatório.');return;}
+  const users=getUsers();
+  if(id){const i=users.findIndex(u=>u.id===id);if(i>-1){users[i].login=login;users[i].nome=nome;users[i].tipo=tipo;if(senha)users[i].senha=senha;}}
+  else{if(!senha){alert('Senha obrigatória.');return;}if(users.find(u=>u.login===login)){alert('Login já existe.');return;}users.push({id:Date.now(),login,nome,senha,tipo,ativo:true,criadoEm:Date.now()});}
+  saveUsers(users);closeModal();renderAdminUsers();
+}
+function setUserType(id,tipo){const users=getUsers();const i=users.findIndex(u=>u.id===id);if(i>-1){users[i].tipo=tipo;saveUsers(users);}renderAdminUsers();}
+function toggleUserBlock(id){const users=getUsers();const i=users.findIndex(u=>u.id===id);if(i>-1){users[i].ativo=!users[i].ativo;saveUsers(users);}renderAdminUsers();}
+
+// ══ MODAL ══
+function openModal(html){document.getElementById('modal-box').innerHTML=html;document.getElementById('modal-overlay').classList.remove('hidden');}
+function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');}
+function closeModalIfBg(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
+
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('screen-login').classList.contains('active'))doLogin();});
+
+initAuth();
+</script>
+</body>
+</html>
