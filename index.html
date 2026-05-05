@@ -17,7 +17,7 @@
     }
     html,body{height:100%;font-family:'Lato',sans-serif;background:#06091A;overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
     body{display:flex;justify-content:center;min-height:100dvh}
-    #app{width:100%;max-width:430px;min-height:100dvh;display:flex;flex-direction:column;position:relative;overflow:hidden}
+    #app{width:100%;max-width:430px;height:100dvh;display:flex;flex-direction:column;position:relative;overflow:hidden}
     .screen{display:none;flex:1;flex-direction:column}
     .screen.active{display:flex}
 
@@ -41,7 +41,7 @@
     .hr-gold{height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.4;margin:14px 0}
 
     /* ── LOGIN ── */
-    #screen-login{background:#0B1A3E;align-items:center;justify-content:center;padding:32px 24px}
+    #screen-login{background:#0B1A3E;align-items:center;justify-content:center;padding:32px 24px;overflow-y:auto}
     .login-box{width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center}
     .login-box .logo-svg{width:min(72vw,280px);margin-bottom:12px;height:auto}
     .logo-wordmark{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;letter-spacing:5px;color:var(--gold)}
@@ -107,7 +107,7 @@
     #ps-start-btn:disabled,#ps-sortear-btn:disabled{opacity:.35;cursor:not-allowed;transform:none !important}
 
     /* ── GUEST JOIN ── */
-    #screen-guest{background:#0B1A3E;align-items:center;justify-content:center;padding:32px 20px}
+    #screen-guest{background:#0B1A3E;align-items:center;justify-content:center;padding:32px 20px;overflow-y:auto}
     .guest-box{width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:12px}
     .guest-title{font-family:'Playfair Display',serif;font-size:20px;color:var(--gold);text-align:center}
     .guest-sub{font-size:13px;color:var(--txt2);text-align:center;line-height:1.6}
@@ -117,7 +117,7 @@
     .guest-expired{color:#F87171;font-size:13px;text-align:center}
 
     /* ── MY CARDS ── */
-    #screen-my-cards{background:#0B1220;padding:0}
+    #screen-my-cards{background:#0B1220;padding:0;overflow:hidden}
     .sub-header{display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(0,0,0,.25);border-bottom:1px solid rgba(255,255,255,.06)}
     .sub-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--gold);flex:1}
     .cards-list-area{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
@@ -213,7 +213,7 @@
     .prog-pack{background:linear-gradient(90deg,#005a8a,#00a0d0)}
 
     /* ── END ── */
-    #screen-end{background:#0B1A3E;align-items:center;justify-content:center;text-align:center;padding:32px 20px}
+    #screen-end{background:#0B1A3E;align-items:center;justify-content:center;text-align:center;padding:32px 20px;overflow-y:auto}
     .end-icon{font-size:54px;margin-bottom:14px}
     .end-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--gold);margin-bottom:10px}
     .end-sub{font-size:13px;color:rgba(212,175,55,.45);line-height:1.7;margin-bottom:28px}
