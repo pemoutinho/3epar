@@ -1113,9 +1113,10 @@ function beginGame(){
 
 let deck=[],current=0,mode='n1',isFlipped=false;
 let jokersHeld=[];  // [{playerIdx, playerName}]
+let gameStartMode='n1'; // nível inicial da partida (para reiniciar corretamente)
 
 function startGameWithPlayers(m,players,seed,starterIdx){
-  mode=m; gamePlayers=[...players]; currentPlayerIdx=starterIdx||0;
+  mode=m; gameStartMode=m; gamePlayers=[...players]; currentPlayerIdx=starterIdx||0;
   jokersHeld=[];gameSeed=seed;
   deck=buildDeck(m,seed);
   if(!deck.length){alert('Sem cartas disponíveis.');return;}
@@ -1434,10 +1435,13 @@ function triggerCardAnim(){
 }
 function restartGame(){
   if(gameRef&&fbListenerActive){gameRef.off();fbListenerActive=false;gameRef=null;}
-  startGameWithPlayers(mode,gamePlayers,Math.floor(Math.random()*2147483647),0);
+  _levelTransitioning=false;
+  startGameWithPlayers(gameStartMode,gamePlayers,Math.floor(Math.random()*2147483647),0);
 }
 function goMenu(){
   if(gameRef&&fbListenerActive){gameRef.off();fbListenerActive=false;gameRef=null;}
+  _levelTransitioning=false;
+  const ov=document.getElementById('level-up-overlay');if(ov)ov.remove();
   isHost=false;document.getElementById('guest-banner').style.display='none';
   renderMenu();showScreen('screen-menu');
 }
