@@ -213,11 +213,18 @@
     .prog-pack{background:linear-gradient(90deg,#005a8a,#00a0d0)}
 
     /* ── END ── */
-    #screen-end{background:#0B1A3E;align-items:center;justify-content:center;text-align:center;padding:32px 20px;overflow-y:auto}
+    #screen-end{background:#1E0800;align-items:center;justify-content:center;text-align:center;padding:32px 20px;overflow-y:auto}
     .end-icon{font-size:54px;margin-bottom:14px}
-    .end-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--gold);margin-bottom:10px}
+    .end-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--gold);margin-bottom:10px;line-height:1.4}
     .end-sub{font-size:13px;color:rgba(212,175,55,.45);line-height:1.7;margin-bottom:28px}
     .end-btns{display:flex;flex-direction:column;gap:10px;width:100%;max-width:280px}
+    @keyframes lvlIn{0%{opacity:0;transform:scale(.92)}60%{opacity:1;transform:scale(1.02)}100%{opacity:1;transform:scale(1)}}
+    @keyframes lvlOut{0%{opacity:1}100%{opacity:0;transform:scale(1.06)}}
+    #level-up-overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:500;animation:lvlIn .55s ease forwards}
+    #level-up-overlay.leaving{animation:lvlOut .45s ease forwards}
+    .lvlup-flames{font-size:52px;filter:drop-shadow(0 0 18px rgba(212,175,55,.7))}
+    .lvlup-label{font-family:'Playfair Display',serif;font-size:26px;color:var(--gold);letter-spacing:3px;font-weight:700}
+    .lvlup-sub{font-size:11px;color:rgba(212,175,55,.55);letter-spacing:5px;text-transform:uppercase}
     .end-btn{padding:15px;border-radius:10px;font-family:'Playfair Display',serif;font-size:15px;font-style:italic;cursor:pointer;border:none;min-height:50px;transition:transform .14s}
     .end-btn:hover{transform:translateY(-2px)}
     .end-restart{background:linear-gradient(135deg,#122A5E,#1E4A9E);color:var(--gold)}
@@ -501,10 +508,10 @@
 
   <!-- END -->
   <div id="screen-end" class="screen">
-    <div class="end-icon">🃏</div>
-    <div class="end-title">Baralho esgotado!</div>
+    <div class="end-icon">🔥</div>
+    <div class="end-title">As cartas acabaram,<br>mas o jogo apenas começou</div>
     <div class="end-players" id="end-players"></div>
-    <p class="end-sub">Todas as cartas foram jogadas.<br>A noite foi inesquecível?</p>
+    <p class="end-sub" id="end-sub"></p>
     <div class="end-btns">
       <button class="end-btn end-restart" onclick="restartGame()">Jogar novamente ↺</button>
       <button class="end-btn end-menu" onclick="goMenu()">Escolher outro nível</button>
@@ -674,7 +681,18 @@ function getProgress(uid){
 // Gravação — atualiza cache + localStorage + Firebase
 function saveUsers(u){
   _users=u; dbSet(SK.users,u);
-  if(fbDb){const o={};u.forEach(x=>o['u'+x.id]=x);fbDb.ref('users').set(o).catch(()=>{});}
+  if(fbDb){
+    const o={};u.forEach(x=>o['u'+x.id]=x);
+    fbDb.ref('users').set(o).then(()=>{
+      // Sucesso: _users já está correto
+    }).catch(err=>{
+      console.error('[3ÉPAR] Erro ao salvar usuários no Firebase:',err);
+      // Mantém _users com o valor correto mesmo que Firebase rejeite
+      _users=u;
+      dbSet(SK.users,u);
+      alert('Atenção: usuário salvo localmente, mas houve erro ao sincronizar com o servidor.\n\nVerifique as regras do Firebase Realtime Database.');
+    });
+  }
 }
 function saveCustomCards(c){
   _customCards=c; dbSet(SK.customCards,c);
@@ -795,6 +813,9 @@ const FB_CONFIG={
 };
 let fbDb=null,gameRef=null,fbListenerActive=false;
 let isHost=false,myPlayerName='',_remoteCard=null,_remoteTotalCards=0;
+let _guestFlipLock=false,_guestFlipCardIdx=-1,_remoteCurrent=0;
+let _levelTransitioning=false;
+const NEXT_LEVEL={n1:'n2',n2:'n3'};
 
 function seededShuffle(arr,seed){
   const a=[...arr];let s=seed>>>0;
@@ -854,6 +875,20 @@ function subscribeToGame(){
 }
 
 function applyRemoteState(st){
+  // Convidado: transição de nível
+  if(!isHost&&st.levelTransition&&!_levelTransitioning){
+    mode=st.levelTransition;
+    showLevelTransitionOverlay(st.levelTransition,null);
+  }
+  // Se convidado acabou de virar a carta, não deixa o Firebase reverter
+  if(!isHost&&_guestFlipLock){
+    if(st.current!==undefined&&st.current!==_guestFlipCardIdx){
+      _guestFlipLock=false; // anfitrião avançou → libera o lock
+    } else if(!st.isFlipped){
+      st={...st,isFlipped:true}; // mantém virada até o anfitrião avançar
+    }
+  }
+  if(!isHost&&st.current!==undefined) _remoteCurrent=st.current;
   isFlipped=st.isFlipped;
   currentPlayerIdx=st.currentPlayerIdx;
   jokersHeld=st.jokersHeld||[];
@@ -870,8 +905,13 @@ function applyRemoteState(st){
   }
   if(!isHost&&st.currentCard){renderBack();renderFront(st.currentCard);}
   const c3d=document.getElementById('card3d');
-  if(isFlipped){c3d.classList.add('flipped');document.getElementById('tap-hint').style.opacity='0';}
-  else{c3d.classList.remove('flipped');}
+  if(isFlipped){
+    c3d.classList.add('flipped');
+    // Não sobrescreve a mensagem de espera do convidado
+    if(!_guestFlipLock) document.getElementById('tap-hint').style.opacity='0';
+  } else {
+    c3d.classList.remove('flipped');
+  }
   const cfg=getCfg(st.mode||mode);
   const tot=isHost?deck.length:_remoteTotalCards;
   document.getElementById('mode-badge').textContent=cfg.label;
@@ -1230,6 +1270,9 @@ function flipCard(){
   if(isFlipped){if(isHost)nextCard();return;}
   if(!isHost){
     if(gamePlayers[currentPlayerIdx]?.name!==myPlayerName)return;
+    // Lock: impede Firebase de reverter o flip antes do anfitrião avançar
+    _guestFlipLock=true;
+    _guestFlipCardIdx=_remoteCurrent;
   }
   isFlipped=true;
   document.getElementById('card3d').classList.add('flipped');
@@ -1245,7 +1288,15 @@ function flipCard(){
   if(gameRef){
     const upd={isFlipped:true};
     if(card&&card.tipo==='Coringa'&&card.isLevelJoker)upd.jokersHeld=jokersHeld;
-    gameRef.update(upd);
+    gameRef.update(upd).catch(err=>{
+      console.error('[3ÉPAR] Firebase write error (guest flip):', err);
+    });
+  }
+  // Mostra ao convidado que precisa aguardar o anfitrião avançar
+  if(!isHost){
+    const hint=document.getElementById('tap-hint');
+    hint.textContent='Aguardando o anfitrião avançar...';
+    hint.style.opacity='.6';
   }
 }
 
@@ -1272,12 +1323,15 @@ function useJoker(jokerIdx){
 
 function nextCard(){
   if(!isHost)return;
+  _guestFlipLock=false;
   if(current>=deck.length-1&&currentUser&&currentUser.id){
     const lvlMap={n1:'n1',n2:'n2',n3:'n3'};
     if(lvlMap[mode])setLevelDone(currentUser.id,mode);
   }
   current++;
   if(current>=deck.length){
+    const nextLvl=NEXT_LEVEL[mode];
+    if(nextLvl){advanceToLevel(nextLvl);return;}
     if(gameRef)gameRef.update({gameOver:true});
     showScreen('screen-end');renderEndScreen();return;
   }
@@ -1293,10 +1347,58 @@ function nextCard(){
   pushGameState();
 }
 
+function advanceToLevel(nextMode){
+  mode=nextMode;
+  deck=buildDeck(nextMode);
+  if(!deck.length){
+    // Nível sem cartas — pula para o próximo ou termina
+    const skip=NEXT_LEVEL[nextMode];
+    if(skip){advanceToLevel(skip);return;}
+    if(gameRef)gameRef.update({gameOver:true});
+    showScreen('screen-end');renderEndScreen();return;
+  }
+  current=0;isFlipped=false;
+  const cfg=getCfg(nextMode);
+  // Notifica convidados da transição de nível
+  if(gameRef)gameRef.update({levelTransition:nextMode,mode:nextMode});
+  showLevelTransitionOverlay(nextMode,()=>{
+    document.getElementById('screen-game').style.background=cfg.bg;
+    const c=document.getElementById('card3d');
+    c.style.transition='none';c.classList.remove('flipped');void c.offsetWidth;c.style.transition='';
+    renderBack();renderFront(deck[0]);updateGameUI();
+    document.getElementById('tap-hint').style.opacity='1';
+    resetSortearChip();
+    document.getElementById('sortear-bar').style.display='none';
+    triggerCardAnim();
+    pushGameState();
+  });
+}
+
+function showLevelTransitionOverlay(nextMode,onDone){
+  if(_levelTransitioning)return;
+  _levelTransitioning=true;
+  const cfg=getCfg(nextMode);
+  const labels={n2:'Nível 2',n3:'Nível 3'};
+  const el=document.createElement('div');
+  el.id='level-up-overlay';
+  el.style.background=cfg.bg;
+  el.innerHTML=`
+    <div class="lvlup-flames">${cfg.flames}</div>
+    <div class="lvlup-label">${labels[nextMode]||cfg.label}</div>
+    <div class="lvlup-sub">Próxima Rodada</div>`;
+  document.getElementById('app').appendChild(el);
+  setTimeout(()=>{
+    el.classList.add('leaving');
+    setTimeout(()=>{el.remove();_levelTransitioning=false;if(onDone)onDone();},450);
+  },2400);
+}
+
 function renderEndScreen(){
   const ep=document.getElementById('end-players');
   if(gamePlayers.length>0)ep.textContent='Jogadores: '+gamePlayers.map(p=>p.name).join(', ');
   else ep.textContent='';
+  const sub=document.getElementById('end-sub');
+  if(sub)sub.textContent='';
 }
 
 function shuffleDeck(){
