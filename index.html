@@ -280,6 +280,7 @@
     .card-wrap{animation:cardIn .38s ease forwards}
     @keyframes spin{to{transform:rotate(360deg)}}
     .spinning{display:inline-block;animation:spin .5s linear infinite}
+    @keyframes pulse{0%,100%{opacity:.2;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}
   </style>
 </head>
 <body>
@@ -337,8 +338,18 @@
 
 <div id="app">
 
+  <!-- LOADING -->
+  <div id="screen-loading" class="screen active" style="background:#06091A;align-items:center;justify-content:center;flex-direction:column;gap:18px">
+    <img src="logo.png" style="width:min(60vw,220px);height:auto;opacity:.85" alt="3ÉPAR"/>
+    <div style="display:flex;gap:8px">
+      <span style="width:10px;height:10px;border-radius:50%;background:var(--gold);opacity:.3;animation:pulse 1.2s ease-in-out infinite"></span>
+      <span style="width:10px;height:10px;border-radius:50%;background:var(--gold);opacity:.3;animation:pulse 1.2s ease-in-out .2s infinite"></span>
+      <span style="width:10px;height:10px;border-radius:50%;background:var(--gold);opacity:.3;animation:pulse 1.2s ease-in-out .4s infinite"></span>
+    </div>
+  </div>
+
   <!-- LOGIN -->
-  <div id="screen-login" class="screen active">
+  <div id="screen-login" class="screen">
     <div class="login-box">
       <img src="logo.png" class="logo-svg" alt="3ÉPAR"/>
       <div class="logo-tagline">Consentimento e Prazer</div>
@@ -642,27 +653,83 @@ const SK={users:'3epar_users',session:'3epar_session',customCards:'3epar_custom_
 function dbGet(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch(e){return f;}}
 function dbSet(k,v){localStorage.setItem(k,JSON.stringify(v));}
 
-function initDB(){
-  if(!localStorage.getItem(SK.users)){
-    dbSet(SK.users,[
-      {id:1,login:'admin',senha:'D5m3ubn7!',tipo:'admin',ativo:true,nome:'Administrador'},
-      {id:2,login:'teste',senha:'teste',tipo:'promo',ativo:true,nome:'Teste'}
-    ]);
+// ── Caches em memória sincronizados com Firebase ──
+let _users=null, _progress=null, _customCards=null;
+
+const DEFAULT_USERS=[
+  {id:1,login:'admin',senha:'D5m3ubn7!',tipo:'admin',ativo:true,nome:'Administrador'},
+  {id:2,login:'teste',senha:'teste',tipo:'promo',ativo:true,nome:'Teste'}
+];
+
+// Leitura — usa cache Firebase; fallback localStorage
+function getUsers(){return _users!==null?_users:dbGet(SK.users,DEFAULT_USERS);}
+function getCustomCards(){return _customCards!==null?_customCards:dbGet(SK.customCards,[]);}
+function getExtraDefault(){return dbGet(SK.extraDefault,[]);}
+function getPacks(){return dbGet(SK.packs,[]);}
+function getProgress(uid){
+  if(_progress&&_progress[uid])return _progress[uid];
+  return dbGet(SK.progress,{})[uid]||{n1:true,n2:false,n3:false};
+}
+
+// Gravação — atualiza cache + localStorage + Firebase
+function saveUsers(u){
+  _users=u; dbSet(SK.users,u);
+  if(fbDb){const o={};u.forEach(x=>o['u'+x.id]=x);fbDb.ref('users').set(o).catch(()=>{});}
+}
+function saveCustomCards(c){
+  _customCards=c; dbSet(SK.customCards,c);
+  if(fbDb){
+    if(c.length){const o={};c.forEach(x=>o[x.id]=x);fbDb.ref('custom_cards').set(o).catch(()=>{});}
+    else fbDb.ref('custom_cards').remove().catch(()=>{});
   }
 }
-function getUsers(){return dbGet(SK.users,[]);}
-function saveUsers(u){dbSet(SK.users,u);}
-function getCustomCards(){return dbGet(SK.customCards,[]);}
-function saveCustomCards(c){dbSet(SK.customCards,c);}
-function getExtraDefault(){return dbGet(SK.extraDefault,[]);}
 function saveExtraDefault(c){dbSet(SK.extraDefault,c);}
-function getPacks(){return dbGet(SK.packs,[]);}
 function savePacks(p){dbSet(SK.packs,p);}
-
-function getProgress(uid){const all=dbGet(SK.progress,{});return all[uid]||{n1:true,n2:false,n3:false};}
-function setLevelDone(uid,lvl){const all=dbGet(SK.progress,{});if(!all[uid])all[uid]={n1:true,n2:false,n3:false};all[uid][lvl]=true;if(lvl==='n1')all[uid].n2=true;if(lvl==='n2')all[uid].n3=true;dbSet(SK.progress,all);}
+function setLevelDone(uid,lvl){
+  if(!_progress)_progress={};
+  if(!_progress[uid])_progress[uid]={n1:true,n2:false,n3:false};
+  _progress[uid][lvl]=true;
+  if(lvl==='n1')_progress[uid].n2=true;
+  if(lvl==='n2')_progress[uid].n3=true;
+  const all=dbGet(SK.progress,{});all[uid]=_progress[uid];dbSet(SK.progress,all);
+  if(fbDb)fbDb.ref('progress/'+uid).set(_progress[uid]).catch(()=>{});
+}
 
 function isVIP(user){return user&&(user.tipo==='vip'||user.tipo==='admin');}
+
+// ── Inicialização Firebase: carrega todos os dados do usuário ──
+async function initAllFromFirebase(){
+  // Garante usuários padrão no localStorage como fallback
+  if(!localStorage.getItem(SK.users))dbSet(SK.users,DEFAULT_USERS);
+
+  if(!initFirebase())return; // sem Firebase → usa só localStorage
+
+  try{
+    // Usuários
+    const us=await fbDb.ref('users').once('value');
+    const ud=us.val();
+    if(!ud){
+      const o={};DEFAULT_USERS.forEach(u=>o['u'+u.id]=u);
+      await fbDb.ref('users').set(o);
+      _users=[...DEFAULT_USERS];
+    }else{
+      _users=Object.values(ud);
+    }
+    fbDb.ref('users').on('value',s=>{const d=s.val();if(d)_users=Object.values(d);});
+
+    // Progresso
+    const ps=await fbDb.ref('progress').once('value');
+    _progress=ps.val()||{};
+    fbDb.ref('progress').on('value',s=>{_progress=s.val()||{};});
+
+    // Cartas personalizadas
+    const cs=await fbDb.ref('custom_cards').once('value');
+    const cd=cs.val();
+    _customCards=cd?Object.values(cd):[];
+    fbDb.ref('custom_cards').on('value',s=>{const d=s.val();_customCards=d?Object.values(d):[];});
+
+  }catch(e){console.error('Erro ao carregar dados Firebase:',e);}
+}
 
 // ══ AUTH ══
 let currentUser=null;
@@ -687,16 +754,21 @@ function goLogout(){
   showScreen('screen-login');
 }
 
-function initAuth(){
-  initDB();
-  // Check guest link first
+async function initAuth(){
+  showScreen('screen-loading');
+  await initAllFromFirebase();
   const params=new URLSearchParams(location.search);
   const gParam=params.get('g');
   if(gParam){handleGuestLink(gParam);return;}
   const s=dbGet(SK.session,null);
   if(s){
     const user=getUsers().find(u=>u.id===s.id);
-    if(user&&user.ativo){currentUser=user;if(user.tipo==='admin'){showScreen('screen-admin');adminTab('custom');}else{renderMenu();showScreen('screen-menu');}return;}
+    if(user&&user.ativo){
+      currentUser=user;
+      if(user.tipo==='admin'){showScreen('screen-admin');adminTab('custom');}
+      else{renderMenu();showScreen('screen-menu');}
+      return;
+    }
   }
   showScreen('screen-login');
 }
