@@ -83,6 +83,18 @@
     .my-cards-btn{width:100%;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:rgba(255,255,255,.45);font-size:12px;cursor:pointer;transition:background .2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px}
     .my-cards-btn:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.7)}
     .packs-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(212,175,55,.35);margin-bottom:8px;text-align:center}
+    .expansion-section{margin-top:4px;margin-bottom:10px}
+    .expansion-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(212,175,55,.3);margin-bottom:8px;text-align:center}
+    .expansion-btn{width:100%;padding:0;background:linear-gradient(135deg,rgba(120,40,10,.55),rgba(60,10,40,.55));border:1px solid rgba(212,175,55,.35);border-radius:12px;cursor:pointer;overflow:hidden;position:relative;transition:border-color .2s,transform .15s}
+    .expansion-btn:hover{border-color:rgba(212,175,55,.7);transform:translateY(-1px)}
+    .expansion-btn-inner{display:flex;align-items:center;gap:14px;padding:14px 16px}
+    .expansion-btn-icon{font-size:32px;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(212,175,55,.5))}
+    .expansion-btn-text{flex:1;text-align:left}
+    .expansion-btn-title{font-family:'Playfair Display',serif;font-size:15px;color:var(--gold);font-weight:700;letter-spacing:1px}
+    .expansion-btn-sub{font-size:11px;color:rgba(212,175,55,.55);margin-top:3px}
+    .expansion-btn-badge{font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:3px 8px;border-radius:10px;border:1px solid rgba(212,175,55,.4);color:rgba(212,175,55,.7);background:rgba(212,175,55,.08);flex-shrink:0}
+    .expansion-btn-unlocked .expansion-btn-badge{background:rgba(212,175,55,.2);border-color:var(--gold);color:var(--gold)}
+    .expansion-btn-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(212,175,55,.08) 0%,transparent 60%);pointer-events:none}
     .pack-btn{width:100%;padding:12px 14px;background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.22);border-radius:10px;color:rgba(212,175,55,.7);font-size:13px;cursor:pointer;transition:background .2s;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
     .pack-btn:hover{background:rgba(212,175,55,.14)}
     .pack-badge{font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:3px 8px;border-radius:10px;background:rgba(212,175,55,.15);color:var(--gold)}
@@ -409,6 +421,20 @@
     </div>
     <button class="all-btn" onclick="openPlayerSetup('all')">✦ Todos os níveis juntos ✦</button>
 <button id="my-cards-btn" class="my-cards-btn" onclick="showScreen('screen-my-cards');renderMyCards()">✎ Minhas Cartas Personalizadas</button>
+    <div class="expansion-section">
+      <div class="expansion-label">Expansões</div>
+      <button class="expansion-btn" id="pack20-btn" onclick="openPack20()">
+        <div class="expansion-btn-glow"></div>
+        <div class="expansion-btn-inner">
+          <div class="expansion-btn-icon">🃏</div>
+          <div class="expansion-btn-text">
+            <div class="expansion-btn-title">Pack 20 Cartas</div>
+            <div class="expansion-btn-sub" id="pack20-sub">20 cartas exclusivas para intensificar o jogo</div>
+          </div>
+          <div class="expansion-btn-badge" id="pack20-badge">EM BREVE</div>
+        </div>
+      </button>
+    </div>
     <div id="packs-section" style="display:none">
       <div class="packs-label">Packs Disponíveis</div>
       <div id="packs-list"></div>
@@ -1177,6 +1203,21 @@ function renderMenu(){
   // VIP-only features
   document.getElementById('my-cards-btn').style.display=isVIP(currentUser)?'flex':'none';
 
+  // Pack 20 cartas — desbloqueado se usuário tiver pack20:true
+  const hasPack20=currentUser.pack20===true;
+  const badge=document.getElementById('pack20-badge');
+  const sub=document.getElementById('pack20-sub');
+  const btn=document.getElementById('pack20-btn');
+  if(hasPack20){
+    badge.textContent='DESBLOQUEADO';
+    btn.classList.add('expansion-btn-unlocked');
+    sub.textContent='Suas 20 cartas exclusivas estão disponíveis';
+  }else{
+    badge.textContent='EM BREVE';
+    btn.classList.remove('expansion-btn-unlocked');
+    sub.textContent='20 cartas exclusivas para intensificar o jogo';
+  }
+
   // Level locks
   const prog=getProgress(currentUser.id);
   ['n2','n3'].forEach(l=>{
@@ -1196,6 +1237,34 @@ function renderMenu(){
         <span style="color:rgba(212,175,55,.4);font-size:12px">▶</span>
       </button>`).join('');
   }else sec.style.display='none';
+}
+
+function openPack20(){
+  const hasPack20=currentUser&&currentUser.pack20===true;
+  if(hasPack20){
+    openPlayerSetup('pack20');
+    return;
+  }
+  openModal(`
+    <div style="text-align:center;padding:8px 0">
+      <div style="font-size:48px;margin-bottom:12px">🃏</div>
+      <div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--gold);font-weight:700;margin-bottom:6px">Pack 20 Cartas</div>
+      <div style="font-size:12px;color:rgba(212,175,55,.5);letter-spacing:3px;text-transform:uppercase;margin-bottom:18px">Expansão Exclusiva</div>
+      <div style="background:rgba(212,175,55,.07);border:1px solid rgba(212,175,55,.2);border-radius:10px;padding:14px;margin-bottom:18px;text-align:left">
+        <div style="font-size:12px;color:var(--txt2);line-height:1.8">
+          ✦ 20 cartas inéditas exclusivas<br>
+          ✦ Desafios e perguntas de alto nível<br>
+          ✦ Integradas às cartas padrão<br>
+          ✦ Disponíveis em todos os níveis<br>
+          ✦ Acesso vitalício após a compra
+        </div>
+      </div>
+      <div style="font-size:13px;color:rgba(212,175,55,.6);margin-bottom:20px;line-height:1.6">
+        Em breve disponível para compra.<br>Aguarde o lançamento!
+      </div>
+      <button class="btn btn-gold btn-full" onclick="closeModal()" style="opacity:.6;cursor:default">Em breve...</button>
+      <button class="btn btn-outline btn-full" onclick="closeModal()" style="margin-top:8px">Fechar</button>
+    </div>`);
 }
 
 // ══ GAME RENDER ══
@@ -1676,6 +1745,7 @@ function renderAdminUsers(){
       ${u.tipo!=='admin'?`<div class="user-row-actions">
         ${u.tipo==='promo'?`<button class="btn btn-sm btn-success" onclick="setUserType(${u.id},'vip')">↑ VIP</button>`:''}
         ${u.tipo==='vip'?`<button class="btn btn-sm btn-outline" onclick="setUserType(${u.id},'promo')">↓ Promo</button>`:''}
+        <button class="btn btn-sm ${u.pack20?'btn-danger':'btn-outline'}" onclick="togglePack20(${u.id})" title="Pack 20 Cartas">🃏${u.pack20?' Pack ✓':' Pack'}</button>
         <button class="btn btn-sm ${u.ativo?'btn-danger':'btn-success'}" onclick="toggleUserBlock(${u.id})">${u.ativo?'Bloquear':'Desbloquear'}</button>
         <button class="btn btn-sm btn-outline" onclick="openUserModal(${u.id})">✎</button>
       </div>`:'<div style="font-size:11px;color:var(--txt2)">Conta de administrador</div>'}
@@ -1707,6 +1777,7 @@ function saveUser(id){
 }
 function setUserType(id,tipo){const users=getUsers();const i=users.findIndex(u=>u.id===id);if(i>-1){users[i].tipo=tipo;saveUsers(users);}renderAdminUsers();}
 function toggleUserBlock(id){const users=getUsers();const i=users.findIndex(u=>u.id===id);if(i>-1){users[i].ativo=!users[i].ativo;saveUsers(users);}renderAdminUsers();}
+function togglePack20(id){const users=getUsers();const i=users.findIndex(u=>u.id===id);if(i>-1){users[i].pack20=!users[i].pack20;saveUsers(users);}renderAdminUsers();}
 
 // ══ MODAL ══
 function openModal(html){document.getElementById('modal-box').innerHTML=html;document.getElementById('modal-overlay').classList.remove('hidden');}
