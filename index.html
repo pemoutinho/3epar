@@ -41,8 +41,14 @@
     .btn-full{width:100%}
     .hr-gold{height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.4;margin:14px 0}
 
-    /* ── LOGIN ── */
+    /* ── LOGIN / CADASTRO ── */
     #screen-login{background:#0B1A3E;align-items:center;justify-content:center;padding:32px 24px;overflow-y:auto}
+    #screen-cadastro{background:#0B1A3E;flex-direction:column;overflow:hidden}
+    .cad-header{display:flex;align-items:center;gap:10px;padding:14px 16px;background:rgba(0,0,0,.25);border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
+    .cad-body{padding:20px 20px 32px;overflow-y:auto;flex:1;display:flex;flex-direction:column;align-items:center}
+    .cad-form{width:100%;max-width:340px}
+    .type-pendente{background:rgba(239,68,68,.15);color:#F87171;border:1px solid rgba(239,68,68,.3)}
+    .expires-badge{font-size:10px;color:rgba(212,175,55,.5);margin-top:2px}
     .login-box{width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center}
     .login-box .logo-svg{width:min(72vw,280px);margin-bottom:12px;height:auto}
     .logo-wordmark{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;letter-spacing:5px;color:var(--gold)}
@@ -405,9 +411,32 @@
         <button class="btn btn-gold btn-full" style="margin-top:6px" onclick="doLogin()">Entrar</button>
       </div>
       <div class="hr-gold" style="width:100%;margin-top:16px;margin-bottom:16px"></div>
-      <button class="btn btn-gold btn-full" style="letter-spacing:2px;font-size:14px" onclick="showScreen('screen-plans');renderPlansScreen()">COMPRAR</button>
+      <button class="btn btn-gold btn-full" style="letter-spacing:2px;font-size:14px" onclick="showScreen('screen-cadastro')">COMPRAR</button>
       <button class="btn btn-full" style="background:transparent;border:1.5px solid rgba(212,175,55,.5);color:rgba(212,175,55,.8);letter-spacing:2px;font-size:13px;margin-top:8px" onclick="startFreeTrial()">TESTE GRÁTIS</button>
       <div style="color:rgba(255,255,255,.3);font-size:11px;margin-top:8px;text-align:center">6 cartas sem cadastro</div>
+    </div>
+  </div>
+
+  <!-- CADASTRO -->
+  <div id="screen-cadastro" class="screen">
+    <div class="cad-header">
+      <button class="icon-btn" onclick="showScreen('screen-login')">← Voltar</button>
+      <div style="font-family:'Playfair Display',serif;font-size:16px;color:var(--gold);flex:1;text-align:center">Criar Conta</div>
+    </div>
+    <div class="cad-body">
+      <div class="cad-form">
+        <div style="text-align:center;margin-bottom:18px">
+          <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:rgba(212,175,55,.5)">Preencha seus dados</div>
+          <div style="font-size:12px;color:var(--txt2);margin-top:4px">Rápido e sem burocracia</div>
+        </div>
+        <div class="field"><label>Nome</label><input type="text" id="cad-nome" placeholder="Seu nome completo" autocomplete="name"/></div>
+        <div class="field"><label>Email</label><input type="email" id="cad-email" placeholder="seu@email.com" autocomplete="email"/></div>
+        <div class="field"><label>Telefone</label><input type="tel" id="cad-tel" placeholder="(11) 9 9999-9999" autocomplete="tel"/></div>
+        <div class="field"><label>Login</label><input type="text" id="cad-login" placeholder="escolha um login" autocomplete="username"/></div>
+        <div class="field"><label>Senha (até 4 dígitos)</label><input type="password" id="cad-senha" maxlength="4" inputmode="numeric" placeholder="••••" autocomplete="new-password"/></div>
+        <div class="err-msg" id="cad-err"></div>
+        <button class="btn btn-gold btn-full" style="margin-top:6px" onclick="doRegister()">Continuar e Escolher Plano →</button>
+      </div>
     </div>
   </div>
 
@@ -416,7 +445,7 @@
     <div class="menu-topbar">
       <div class="user-pill">
         <div class="user-avatar" id="menu-avatar">?</div>
-        <div><div class="user-name" id="menu-username"></div><div class="user-type" id="menu-usertype"></div></div>
+        <div><div class="user-name" id="menu-username"></div><div class="user-type" id="menu-usertype"></div><div class="expires-badge" id="menu-expiry"></div></div>
       </div>
       <div class="topbar-btns"><button class="icon-btn" onclick="goLogout()">Sair</button></div>
     </div>
@@ -515,7 +544,7 @@
   <!-- PLANS -->
   <div id="screen-plans" class="screen" style="background:#06091A;overflow-y:auto;padding:0">
     <div style="padding:16px 16px 0;display:flex;align-items:center;gap:10px">
-      <button class="icon-btn" onclick="freeTrialMode?goLogout():currentUser?(showScreen('screen-menu'),renderMenu()):showScreen('screen-login')">← Voltar</button>
+      <button class="icon-btn" onclick="freeTrialMode?goLogout():(!currentUser||currentUser.tipo==='pendente')?showScreen('screen-login'):((showScreen('screen-menu'),renderMenu()))">← Voltar</button>
       <div style="font-family:'Playfair Display',serif;font-size:16px;color:var(--gold);letter-spacing:2px">Planos</div>
     </div>
     <div style="padding:16px">
@@ -988,7 +1017,22 @@ async function initAllFromFirebase(){
     }else{
       _users=Object.values(ud);
     }
-    fbDb.ref('users').on('value',s=>{const d=s.val();if(d)_users=Object.values(d);});
+    fbDb.ref('users').on('value',s=>{
+      const d=s.val();
+      if(d){
+        _users=Object.values(d);
+        if(currentUser&&currentUser.id){
+          const upd=_users.find(u=>u.id===currentUser.id);
+          if(upd&&(upd.tipo!==currentUser.tipo||upd.ativo!==currentUser.ativo||upd.expiresAt!==currentUser.expiresAt)){
+            currentUser=upd;dbSet(SK.session,upd);
+            if(upd.ativo&&upd.tipo!=='pendente'){
+              const act=document.querySelector('.screen.active');
+              if(act&&(act.id==='screen-plans'||act.id==='screen-login')){renderMenu();showScreen('screen-menu');}
+            }
+          }
+        }
+      }
+    });
 
     // Progresso
     const ps=await fbDb.ref('progress').once('value');
@@ -1028,16 +1072,52 @@ async function initAllFromFirebase(){
 // ══ AUTH ══
 let currentUser=null;
 
+function isAccessActive(user){
+  if(!user||!user.ativo)return false;
+  if(user.tipo==='admin')return true;
+  if(!user.expiresAt)return true;
+  return Date.now()<user.expiresAt;
+}
+
+function showRenewalModal(){
+  const exp=currentUser&&currentUser.expiresAt?new Date(currentUser.expiresAt).toLocaleDateString('pt-BR'):'';
+  openModal(`<div class="modal-title">Acesso expirado</div>
+    <div style="font-size:13px;color:var(--txt2);text-align:center;margin-bottom:20px;line-height:1.6">
+      ${exp?`Seu plano expirou em <strong style="color:var(--gold)">${exp}</strong>.`:'Seu acesso ainda não foi liberado.'}<br>Renove para continuar jogando.
+    </div>
+    <button class="btn btn-gold btn-full" onclick="closeModal();showScreen('screen-plans');renderPlansScreen()">Renovar Plano</button>
+    <button class="btn btn-outline btn-full" style="margin-top:8px" onclick="closeModal()">Fechar</button>`);
+}
+
+function doRegister(){
+  const nome=document.getElementById('cad-nome').value.trim();
+  const email=document.getElementById('cad-email').value.trim();
+  const tel=document.getElementById('cad-tel').value.trim();
+  const login=document.getElementById('cad-login').value.trim();
+  const senha=document.getElementById('cad-senha').value.trim();
+  const err=document.getElementById('cad-err');
+  if(!nome){err.textContent='Nome obrigatório.';return;}
+  if(!login){err.textContent='Login obrigatório.';return;}
+  if(!senha){err.textContent='Senha obrigatória.';return;}
+  if(getUsers().find(u=>u.login===login)){err.textContent='Login já está em uso.';return;}
+  const newUser={id:Date.now(),login,nome,senha,email,telefone:tel,tipo:'pendente',ativo:false,criadoEm:Date.now(),expiresAt:null};
+  const users=getUsers();users.push(newUser);saveUsers(users);
+  currentUser=newUser;dbSet(SK.session,newUser);
+  showScreen('screen-plans');renderPlansScreen();
+  if(window._pendingPlan){const p=window._pendingPlan;window._pendingPlan=null;setTimeout(()=>assinarPlano(p),300);}
+}
+
 function doLogin(){
   const login=document.getElementById('login-input').value.trim();
   const senha=document.getElementById('senha-input').value;
   const err=document.getElementById('login-err');
   const user=getUsers().find(u=>u.login===login&&u.senha===senha);
   if(!user){err.textContent='Login ou senha incorretos.';return;}
+  if(user.tipo==='pendente'){currentUser=user;dbSet(SK.session,user);err.textContent='';showScreen('screen-plans');renderPlansScreen();return;}
   if(!user.ativo){err.textContent='Usuário bloqueado. Contate o administrador.';return;}
   currentUser=user;dbSet(SK.session,user);err.textContent='';
   if(user.tipo==='admin'){showScreen('screen-admin');adminTab('custom');}
-  else{renderMenu();showScreen('screen-menu');}
+  else{renderMenu();showScreen('screen-menu');checkPaymentReturn();}
 }
 
 function startFreeTrial(){
@@ -1077,11 +1157,14 @@ async function initAuth(){
   const s=dbGet(SK.session,null);
   if(s){
     const user=getUsers().find(u=>u.id===s.id);
-    if(user&&user.ativo){
-      currentUser=user;
-      if(user.tipo==='admin'){showScreen('screen-admin');adminTab('custom');}
-      else{renderMenu();showScreen('screen-menu');checkPaymentReturn();}
-      return;
+    if(user){
+      if(user.tipo==='pendente'){currentUser=user;showScreen('screen-plans');renderPlansScreen();return;}
+      if(user.ativo){
+        currentUser=user;
+        if(user.tipo==='admin'){showScreen('screen-admin');adminTab('custom');}
+        else{renderMenu();showScreen('screen-menu');checkPaymentReturn();}
+        return;
+      }
     }
   }
   showScreen('screen-login');
@@ -1423,6 +1506,7 @@ function joinAsGuest(myName,config){
 
 // ══ BEGIN GAME ══
 function beginGame(){
+  if(!isAccessActive(currentUser)){showRenewalModal();return;}
   if(sortedStarterIdx>=0) currentPlayerIdx=sortedStarterIdx;
   else currentPlayerIdx=0;
   startGameWithPlayers(gameMode,gamePlayers,gameSeed||Math.floor(Math.random()*2147483647),currentPlayerIdx);
@@ -1456,6 +1540,7 @@ function startGameWithPlayers(m,players,seed,starterIdx){
 
 // Start without players (from admin or direct)
 function startGame(m){
+  if(!isAccessActive(currentUser)){showRenewalModal();return;}
   gameMode=m;gamePlayers=[];currentPlayerIdx=0;jokersHeld=[];
   deck=buildDeck(m);
   if(!deck.length){alert('Sem cartas disponíveis.');return;}
@@ -1487,6 +1572,15 @@ function renderMenu(){
   document.getElementById('menu-avatar').textContent=(currentUser.nome||currentUser.login)[0].toUpperCase();
   document.getElementById('menu-username').textContent=currentUser.nome||currentUser.login;
   document.getElementById('menu-usertype').textContent=currentUser.tipo.toUpperCase();
+  const expEl=document.getElementById('menu-expiry');
+  if(expEl){
+    if(currentUser.expiresAt&&currentUser.tipo!=='admin'){
+      const exp=new Date(currentUser.expiresAt);
+      const expired=Date.now()>currentUser.expiresAt;
+      expEl.textContent=(expired?'Expirou em ':'Válido até ')+exp.toLocaleDateString('pt-BR');
+      expEl.style.color=expired?'#F87171':'rgba(212,175,55,.5)';
+    }else expEl.textContent='';
+  }
   ['n1','n2','n3'].forEach(l=>{
     const total=getDefaultCards(l).length+getUserCards(l).length;
     document.getElementById('count-'+l).textContent=total+' cartas';
@@ -2102,6 +2196,12 @@ function savePack(id){
 }
 function togglePack(id){const packs=getPacks();const i=packs.findIndex(p=>p.id===id);if(i>-1){packs[i].ativo=!packs[i].ativo;savePacks(packs);}renderAdminPacks();}
 
+function _fmtExpiry(u){
+  if(!u.expiresAt)return'<span style="color:var(--txt2);font-size:10px">Sem validade definida</span>';
+  const d=new Date(u.expiresAt).toLocaleDateString('pt-BR');
+  const expired=Date.now()>u.expiresAt;
+  return`<span style="font-size:10px;color:${expired?'#F87171':'#6EE7B7'}">${expired?'⛔ Expirou em ':'✓ Válido até '}${d}</span>`;
+}
 function renderAdminUsers(){
   const users=getUsers();
   document.getElementById('admin-content').innerHTML=`
@@ -2112,10 +2212,18 @@ function renderAdminUsers(){
         <div><span class="user-row-login">${u.login}</span>${!u.ativo?'<span class="blocked-badge" style="margin-left:8px">Bloqueado</span>':''}</div>
         <span class="user-row-type type-${u.tipo}">${u.tipo.toUpperCase()}</span>
       </div>
-      <div class="user-row-info">${u.nome||''}</div>
+      <div class="user-row-info" style="line-height:1.7">
+        ${u.nome?`<span>${u.nome}</span><br>`:''}
+        ${u.email?`<span style="color:var(--txt2);font-size:11px">✉ ${u.email}</span><br>`:''}
+        ${u.telefone?`<span style="color:var(--txt2);font-size:11px">📞 ${u.telefone}</span><br>`:''}
+        ${u.tipo!=='admin'?_fmtExpiry(u):''}
+      </div>
       ${u.tipo!=='admin'?`<div class="user-row-actions">
         ${u.tipo==='promo'?`<button class="btn btn-sm btn-success" onclick="setUserType(${u.id},'vip')">↑ VIP</button>`:''}
         ${u.tipo==='vip'?`<button class="btn btn-sm btn-outline" onclick="setUserType(${u.id},'promo')">↓ Promo</button>`:''}
+        ${(u.tipo==='pendente')?`<button class="btn btn-sm btn-success" onclick="setUserType(${u.id},'promo')">Ativar PROMO</button>`:''}
+        <button class="btn btn-sm btn-success" onclick="liberarAcesso(${u.id},30)" title="Liberar 30 dias">+30d</button>
+        <button class="btn btn-sm btn-outline" onclick="liberarAcesso(${u.id},365)" title="Liberar 1 ano">+1 ano</button>
         <button class="btn btn-sm ${u.pack20?'btn-danger':'btn-outline'}" onclick="togglePack20(${u.id})" title="Pack 20 Cartas">🃏${u.pack20?' Pack ✓':' Pack'}</button>
         <button class="btn btn-sm ${u.ativo?'btn-danger':'btn-success'}" onclick="toggleUserBlock(${u.id})">${u.ativo?'Bloquear':'Desbloquear'}</button>
         <button class="btn btn-sm btn-outline" onclick="openUserModal(${u.id})">✎</button>
@@ -2124,14 +2232,19 @@ function renderAdminUsers(){
 }
 function openUserModal(id){
   const user=id?getUsers().find(u=>u.id===id):null;
+  const expVal=user&&user.expiresAt?new Date(user.expiresAt).toISOString().slice(0,10):'';
   openModal(`<div class="modal-title">${id?'Editar Usuário':'Novo Usuário'}</div>
     <div class="field"><label>Login</label><input type="text" id="u-login" value="${user?user.login:''}" placeholder="login"/></div>
-    <div class="field"><label>Nome</label><input type="text" id="u-nome" value="${user?user.nome||'':''}" placeholder="Nome"/></div>
-    <div class="field"><label>${id?'Nova Senha (em branco = sem alteração)':'Senha'}</label><input type="password" id="u-senha" placeholder="••••••••"/></div>
+    <div class="field"><label>Nome</label><input type="text" id="u-nome" value="${user?user.nome||'':''}" placeholder="Nome completo"/></div>
+    <div class="field"><label>Email</label><input type="email" id="u-email" value="${user?user.email||'':''}" placeholder="email@exemplo.com"/></div>
+    <div class="field"><label>Telefone</label><input type="tel" id="u-tel" value="${user?user.telefone||'':''}" placeholder="(11) 9 9999-9999"/></div>
+    <div class="field"><label>${id?'Nova Senha (em branco = sem alteração)':'Senha'}</label><input type="password" id="u-senha" maxlength="4" inputmode="numeric" placeholder="••••"/></div>
     <div class="field"><label>Tipo de Acesso</label><select id="u-tipo">
+      <option value="pendente" ${user?.tipo==='pendente'?'selected':''}>Pendente</option>
       <option value="promo" ${user?.tipo==='promo'?'selected':''}>Promo</option>
       <option value="vip" ${user?.tipo==='vip'?'selected':''}>VIP</option>
     </select></div>
+    <div class="field"><label>Validade (data)</label><input type="date" id="u-expiry" value="${expVal}"/></div>
     <div class="modal-actions">
       <button class="btn btn-gold" style="flex:1" onclick="saveUser(${id||0})">Salvar</button>
       <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
@@ -2139,14 +2252,52 @@ function openUserModal(id){
 }
 function saveUser(id){
   const login=document.getElementById('u-login').value.trim(),nome=document.getElementById('u-nome').value.trim();
+  const email=document.getElementById('u-email').value.trim(),tel=document.getElementById('u-tel').value.trim();
   const senha=document.getElementById('u-senha').value,tipo=document.getElementById('u-tipo').value;
+  const expiryStr=document.getElementById('u-expiry').value;
+  const expiresAt=expiryStr?new Date(expiryStr+'T23:59:59').getTime():null;
   if(!login){alert('Login obrigatório.');return;}
   const users=getUsers();
-  if(id){const i=users.findIndex(u=>u.id===id);if(i>-1){users[i].login=login;users[i].nome=nome;users[i].tipo=tipo;if(senha)users[i].senha=senha;}}
-  else{if(!senha){alert('Senha obrigatória.');return;}if(users.find(u=>u.login===login)){alert('Login já existe.');return;}users.push({id:Date.now(),login,nome,senha,tipo,ativo:true,criadoEm:Date.now()});}
+  if(id){
+    const i=users.findIndex(u=>u.id===id);
+    if(i>-1){
+      users[i].login=login;users[i].nome=nome;users[i].email=email;users[i].telefone=tel;
+      users[i].tipo=tipo;
+      if(expiresAt!==null)users[i].expiresAt=expiresAt;
+      if(tipo==='vip'||tipo==='promo')users[i].ativo=true;
+      if(senha)users[i].senha=senha;
+    }
+  }else{
+    if(!senha){alert('Senha obrigatória.');return;}
+    if(users.find(u=>u.login===login)){alert('Login já existe.');return;}
+    users.push({id:Date.now(),login,nome,email,telefone:tel,senha,tipo,ativo:tipo==='pendente'?false:true,expiresAt,criadoEm:Date.now()});
+  }
   saveUsers(users);closeModal();renderAdminUsers();
 }
-function setUserType(id,tipo){const users=getUsers();const i=users.findIndex(u=>u.id===id);if(i>-1){users[i].tipo=tipo;saveUsers(users);}renderAdminUsers();}
+function setUserType(id,tipo){
+  const users=getUsers();const i=users.findIndex(u=>u.id===id);
+  if(i>-1){
+    users[i].tipo=tipo;
+    if(tipo==='vip'||tipo==='promo'){
+      users[i].ativo=true;
+      if(!users[i].expiresAt||users[i].expiresAt<Date.now()){
+        users[i].expiresAt=Date.now()+30*86400000;
+      }
+    }
+    saveUsers(users);
+  }
+  renderAdminUsers();
+}
+function liberarAcesso(id,dias){
+  const users=getUsers();const i=users.findIndex(u=>u.id===id);
+  if(i>-1){
+    users[i].ativo=true;
+    const base=users[i].expiresAt&&users[i].expiresAt>Date.now()?users[i].expiresAt:Date.now();
+    users[i].expiresAt=base+dias*86400000;
+    saveUsers(users);
+  }
+  renderAdminUsers();
+}
 function toggleUserBlock(id){const users=getUsers();const i=users.findIndex(u=>u.id===id);if(i>-1){users[i].ativo=!users[i].ativo;saveUsers(users);}renderAdminUsers();}
 function togglePack20(id){const users=getUsers();const i=users.findIndex(u=>u.id===id);if(i>-1){users[i].pack20=!users[i].pack20;saveUsers(users);}renderAdminUsers();}
 
@@ -2303,7 +2454,12 @@ function renderPacksStore(){
 }
 
 async function assinarPlano(tipo){
-  if(!currentUser){alert('Faça login para assinar.');return;}
+  if(!currentUser||currentUser.tipo==='guest'||freeTrialMode){
+    window._pendingPlan=tipo;
+    showScreen('screen-cadastro');
+    document.getElementById('cad-err').textContent='';
+    return;
+  }
   const planKey=`${tipo}_${_planPeriod}`;
   const btn=event.target;
   btn.disabled=true;btn.textContent='Aguarde...';
@@ -2323,7 +2479,11 @@ async function assinarPlano(tipo){
 }
 
 async function comprarPack(packId,packNome){
-  if(!currentUser){alert('Faça login para comprar.');return;}
+  if(!currentUser||currentUser.tipo==='guest'||freeTrialMode){
+    showScreen('screen-cadastro');
+    document.getElementById('cad-err').textContent='';
+    return;
+  }
   const btn=event.target;
   btn.disabled=true;btn.textContent='Aguarde...';
   try{
@@ -2347,11 +2507,46 @@ function checkPaymentReturn(){
   if(!status)return;
   history.replaceState({},'',location.pathname);
   if(status==='success'){
-    openModal(`<div class="modal-title">Pagamento confirmado! 🎉</div>
-      <div style="font-size:13px;color:var(--txt2);text-align:center;margin-bottom:20px;line-height:1.6">
-        Seu acesso será liberado em instantes.<br>Faça login novamente para ativar.
-      </div>
-      <button class="btn btn-gold btn-full" onclick="closeModal()">OK</button>`);
+    const tryActivate=()=>{
+      if(fbDb&&currentUser){
+        fbDb.ref('users').once('value').then(snap=>{
+          const d=snap.val();
+          if(d){
+            _users=Object.values(d);
+            const upd=_users.find(u=>u.id===currentUser.id);
+            if(upd&&upd.ativo&&upd.tipo!=='pendente'){
+              currentUser=upd;dbSet(SK.session,upd);
+              renderMenu();
+              openModal(`<div class="modal-title">Acesso liberado! 🎉</div>
+                <div style="font-size:13px;color:var(--txt2);text-align:center;margin-bottom:20px;line-height:1.6">
+                  Bem-vindo ao 3ÉPAR! Plano <strong style="color:var(--gold)">${upd.tipo.toUpperCase()}</strong> ativo.
+                  ${upd.expiresAt?`<br>Válido até <strong style="color:var(--gold)">${new Date(upd.expiresAt).toLocaleDateString('pt-BR')}</strong>`:''}
+                </div>
+                <button class="btn btn-gold btn-full" onclick="closeModal()">Começar a jogar →</button>`);
+              return;
+            }
+          }
+          openModal(`<div class="modal-title">Pagamento confirmado! 🎉</div>
+            <div style="font-size:13px;color:var(--txt2);text-align:center;margin-bottom:20px;line-height:1.6">
+              Seu acesso está sendo processado.<br>Aguarde alguns instantes e faça login novamente.
+            </div>
+            <button class="btn btn-gold btn-full" onclick="closeModal();goLogout()">Fazer Login</button>`);
+        }).catch(()=>{
+          openModal(`<div class="modal-title">Pagamento confirmado! 🎉</div>
+            <div style="font-size:13px;color:var(--txt2);text-align:center;margin-bottom:20px;line-height:1.6">
+              Seu acesso será liberado em instantes.<br>Faça login novamente para ativar.
+            </div>
+            <button class="btn btn-gold btn-full" onclick="closeModal();goLogout()">Fazer Login</button>`);
+        });
+      }else{
+        openModal(`<div class="modal-title">Pagamento confirmado! 🎉</div>
+          <div style="font-size:13px;color:var(--txt2);text-align:center;margin-bottom:20px;line-height:1.6">
+            Seu acesso será liberado em instantes.<br>Faça login novamente para ativar.
+          </div>
+          <button class="btn btn-gold btn-full" onclick="closeModal();goLogout()">Fazer Login</button>`);
+      }
+    };
+    tryActivate();
   }else if(status==='failure'){
     openModal(`<div class="modal-title">Pagamento não aprovado</div>
       <div style="font-size:13px;color:var(--txt2);text-align:center;margin-bottom:20px">Tente novamente ou use outro método de pagamento.</div>
