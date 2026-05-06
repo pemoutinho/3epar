@@ -384,7 +384,7 @@
 
   <!-- LOADING -->
   <div id="screen-loading" class="screen active" style="background:#06091A;align-items:center;justify-content:center;flex-direction:column;gap:18px">
-    <img src="logo.png" style="width:min(60vw,220px);height:auto;opacity:.85" alt="3ÉPAR"/>
+    <img src="logo.webp" style="width:min(60vw,220px);height:auto;opacity:.85" alt="3ÉPAR"/>
     <div style="display:flex;gap:8px">
       <span style="width:10px;height:10px;border-radius:50%;background:var(--gold);opacity:.3;animation:pulse 1.2s ease-in-out infinite"></span>
       <span style="width:10px;height:10px;border-radius:50%;background:var(--gold);opacity:.3;animation:pulse 1.2s ease-in-out .2s infinite"></span>
@@ -395,7 +395,7 @@
   <!-- LOGIN -->
   <div id="screen-login" class="screen">
     <div class="login-box">
-      <button class="instr-logo-btn" onclick="logoClick()"><img src="logo.png" class="logo-svg" alt="3ÉPAR"/></button>
+      <button class="instr-logo-btn" onclick="logoClick()"><img src="logo.webp" class="logo-svg" alt="3ÉPAR"/></button>
       <div class="logo-tagline">Consentimento e Prazer</div>
       <div class="hr-gold" style="width:100%;margin-top:10px"></div>
       <div class="login-form">
@@ -417,7 +417,7 @@
       <div class="topbar-btns"><button class="icon-btn" onclick="goLogout()">Sair</button></div>
     </div>
     <div class="logo-block" style="margin-top:10px">
-      <button class="instr-logo-btn" onclick="logoClick()"><img src="logo.png" class="logo-svg" alt="3ÉPAR"/></button>
+      <button class="instr-logo-btn" onclick="logoClick()"><img src="logo.webp" class="logo-svg" alt="3ÉPAR"/></button>
       <div class="logo-tagline">Consentimento e Prazer</div>
     </div>
     <div class="hr-gold"></div>
@@ -499,7 +499,7 @@
   <!-- GUEST JOIN -->
   <div id="screen-guest" class="screen">
     <div class="guest-box">
-      <button class="instr-logo-btn" onclick="logoClick()"><img src="logo.png" style="width:min(62vw,230px);height:auto" alt="3ÉPAR"/></button>
+      <button class="instr-logo-btn" onclick="logoClick()"><img src="logo.webp" style="width:min(62vw,230px);height:auto" alt="3ÉPAR"/></button>
       <div class="guest-title" id="guest-title">Você foi convidado!</div>
       <div class="guest-sub" id="guest-sub">Selecione o seu nome para entrar na partida como jogador.</div>
       <div class="guest-players" id="guest-players-list"></div>
@@ -678,7 +678,7 @@
   <div id="screen-admin" class="screen">
     <div class="admin-header">
       <div class="admin-logo">
-        <img src="logo.png" style="width:80px;height:auto" alt="3ÉPAR"/>
+        <img src="logo.webp" style="width:80px;height:auto" alt="3ÉPAR"/>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <span class="admin-badge">ADMIN</span>
@@ -1116,6 +1116,7 @@ function applyRemoteState(st){
   if(!isHost&&st.currentCard){renderBack();renderFront(st.currentCard);}
   const c3d=document.getElementById('card3d');
   if(isFlipped){
+    loadFrontImage();
     c3d.classList.add('flipped');
     // Não sobrescreve a mensagem de espera do convidado
     if(!_guestFlipLock) document.getElementById('tap-hint').style.opacity='0';
@@ -1458,9 +1459,9 @@ function getCfg(m){
 }
 
 function cardIcon(card){
-  if(card.tipo==='Coringa')return'espada.png';
-  if(card.tipo==='Desafio')return'abacaxi.png';
-  return'borboleta.png';
+  if(card.tipo==='Coringa')return'espada.webp';
+  if(card.tipo==='Desafio')return'abacaxi.webp';
+  return'borboleta.webp';
 }
 
 function renderBack(){
@@ -1468,7 +1469,7 @@ function renderBack(){
   const back=document.getElementById('card-back-face');
   back.className=`card-face card-back ${cfg.backClass}`;
   back.innerHTML=`<div class="back-glow"></div><div class="back-inner">
-    <img src="logo.png" style="width:min(54vw,195px);height:auto" alt="3ÉPAR"/>
+    <img src="logo.webp" style="width:min(54vw,195px);height:auto" alt="3ÉPAR"/>
     <div class="back-flames">${cfg.flames}</div>
   </div>`;
 }
@@ -1481,7 +1482,7 @@ function renderFront(card){
     <svg class="crnr bl" viewBox="0 0 18 18"><use href="#corner"/></svg>
     <svg class="crnr br" viewBox="0 0 18 18"><use href="#corner"/></svg>
     <div class="front-tipo">${card.tipo}</div>
-    <div class="front-icon"><img src="${icon}" alt="" draggable="false"/></div>
+    <div class="front-icon"><img data-src="${icon}" alt="" draggable="false"/></div>
     <div class="front-hr"></div>
     <div class="front-texto">${card.texto}</div>`;
 }
@@ -1520,6 +1521,10 @@ function renderJokersStrip(){
 }
 
 // ══ FLIP + NEXT ══
+function loadFrontImage(){
+  const img=document.querySelector('#card-front-face .front-icon img[data-src]');
+  if(img&&img.dataset.src&&!img.src.includes(img.dataset.src)){img.src=img.dataset.src;}
+}
 function flipCard(){
   if(isFlipped){if(isHost)nextCard();return;}
   if(!isHost){
@@ -1529,6 +1534,7 @@ function flipCard(){
     _guestFlipCardIdx=_remoteCurrent;
   }
   isFlipped=true;
+  loadFrontImage();
   document.getElementById('card3d').classList.add('flipped');
   document.getElementById('tap-hint').style.opacity='0';
   const card=isHost?deck[current]:_remoteCard;
