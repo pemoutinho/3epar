@@ -50,10 +50,12 @@
     .type-pendente{background:rgba(239,68,68,.15);color:#F87171;border:1px solid rgba(239,68,68,.3)}
     .expires-badge{font-size:10px;color:rgba(212,175,55,.5);margin-top:2px}
     .login-box{width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center}
-    .login-box .logo-svg{width:min(72vw,280px);margin-bottom:12px;height:auto}
+    .login-box .logo-svg{width:min(72vw,280px);margin-bottom:0;height:auto}
     .logo-wordmark{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;letter-spacing:5px;color:var(--gold)}
-    .logo-tagline{font-size:clamp(13px,3.8vw,17px);letter-spacing:4px;text-transform:uppercase;color:rgba(212,175,55,.85);font-weight:700;margin-top:6px}
+    .logo-tagline{font-size:clamp(13px,3.8vw,17px);letter-spacing:4px;text-transform:uppercase;color:rgba(212,175,55,.85);font-weight:700;margin:18px 0}
     .login-form{width:100%;margin-top:4px}
+    .btn-comprar{width:100%;padding:15px;border-radius:10px;border:none;cursor:pointer;background:linear-gradient(135deg,#c8102e 0%,#8b0000 100%);color:#fff;font-size:15px;font-weight:800;letter-spacing:3px;text-transform:uppercase;box-shadow:0 4px 22px rgba(200,16,46,.45);transition:transform .15s,box-shadow .15s}
+    .btn-comprar:active{transform:scale(.97);box-shadow:0 2px 12px rgba(200,16,46,.3)}
 
     /* ── MENU ── */
     #screen-menu{background:#0B1A3E;padding:20px 16px;overflow-y:auto}
@@ -403,7 +405,7 @@
     <div class="login-box">
       <button class="instr-logo-btn" onclick="logoClick()"><img src="logo.webp" class="logo-svg" alt="3ÉPAR"/></button>
       <div class="logo-tagline">Consentimento e Prazer</div>
-      <div class="hr-gold" style="width:100%;margin-top:10px"></div>
+      <div class="hr-gold" style="width:100%"></div>
       <div class="login-form">
         <div class="field"><label>Login</label><input type="text" id="login-input" placeholder="seu login" autocomplete="username"/></div>
         <div class="field"><label>Senha</label><input type="password" id="senha-input" placeholder="••••••••" autocomplete="current-password"/></div>
@@ -411,7 +413,7 @@
         <button class="btn btn-gold btn-full" style="margin-top:6px" onclick="doLogin()">Entrar</button>
       </div>
       <div class="hr-gold" style="width:100%;margin-top:16px;margin-bottom:16px"></div>
-      <button class="btn btn-gold btn-full" style="letter-spacing:2px;font-size:14px" onclick="showScreen('screen-cadastro')">COMPRAR</button>
+      <button class="btn-comprar" onclick="showScreen('screen-cadastro')">🔥 Quero Jogar Agora</button>
       <button class="btn btn-full" style="background:transparent;border:1.5px solid rgba(212,175,55,.5);color:rgba(212,175,55,.8);letter-spacing:2px;font-size:13px;margin-top:8px" onclick="startFreeTrial()">TESTE GRÁTIS</button>
       <div style="color:rgba(255,255,255,.3);font-size:11px;margin-top:8px;text-align:center">6 cartas sem cadastro</div>
     </div>
