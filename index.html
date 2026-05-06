@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#0B1A3E">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>3ÉPAR — Baralho</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap');
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -18,7 +19,7 @@
     html,body{height:100%;font-family:'Lato',sans-serif;background:#06091A;overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
     body{display:flex;justify-content:center;min-height:100dvh}
     #app{width:100%;max-width:430px;height:100dvh;display:flex;flex-direction:column;position:relative;overflow:hidden}
-    .screen{display:none;flex:1;flex-direction:column}
+    .screen{display:none;flex:1;flex-direction:column;min-height:0}
     .screen.active{display:flex}
 
     .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
@@ -100,10 +101,10 @@
     .pack-badge{font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:3px 8px;border-radius:10px;background:rgba(212,175,55,.15);color:var(--gold)}
 
     /* ── PLAYER SETUP ── */
-    #screen-players{background:#0B1A3E;padding:0;overflow-y:auto}
+    #screen-players{background:#0B1A3E;padding:0;overflow:hidden}
     .ps-header{display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(0,0,0,.25);border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
     .ps-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--gold);flex:1}
-    .ps-body{padding:16px;display:flex;flex-direction:column;gap:12px;flex:1}
+    .ps-body{padding:16px;display:flex;flex-direction:column;gap:12px;flex:1;overflow-y:auto;min-height:0}
     .ps-add-row{display:flex;gap:8px}
     .ps-add-row input{flex:1;padding:11px 14px;border-radius:8px;border:1px solid rgba(212,175,55,.25);background:rgba(255,255,255,.05);color:var(--txt);font-size:14px;outline:none}
     .ps-add-row input:focus{border-color:rgba(212,175,55,.6)}
@@ -132,7 +133,7 @@
     #screen-my-cards{background:#0B1220;padding:0;overflow:hidden}
     .sub-header{display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(0,0,0,.25);border-bottom:1px solid rgba(255,255,255,.06)}
     .sub-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--gold);flex:1}
-    .cards-list-area{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+    .cards-list-area{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-height:0}
     .card-item{background:var(--panel2);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start}
     .card-item-meta{flex:1;min-width:0}
     .card-item-tipo{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-d);margin-bottom:4px}
@@ -266,6 +267,8 @@
     .custom-card-footer{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
     .custom-card-nivel{font-size:10px;color:var(--txt2)}
     .default-card-row{background:var(--panel2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border:1px solid rgba(255,255,255,.06);display:flex;gap:8px;align-items:flex-start}
+    .default-card-row.disabled{border-color:rgba(239,68,68,.2);background:rgba(255,255,255,.02)}
+    .default-card-row.disabled .default-card-info{opacity:.4}
     .default-card-info{flex:1;min-width:0}
     .default-card-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
     .nivel-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
@@ -300,6 +303,28 @@
     @keyframes spin{to{transform:rotate(360deg)}}
     .spinning{display:inline-block;animation:spin .5s linear infinite}
     @keyframes pulse{0%,100%{opacity:.2;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}
+
+    /* ── INSTRUCTIONS ── */
+    #screen-instructions{background:#0B1A3E;padding:0;flex-direction:column}
+    .instr-header{display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(0,0,0,.25);border-bottom:1px solid rgba(212,175,55,.15);flex-shrink:0}
+    .instr-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);flex:1;text-align:center}
+    .instr-body{flex:1;overflow-y:auto;padding:20px 18px 32px;min-height:0}
+    .instr-section{margin-bottom:24px}
+    .instr-section-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--gold);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+    .instr-section-title span{font-size:20px}
+    .instr-text{font-size:13px;color:rgba(249,250,251,.75);line-height:1.8}
+    .instr-text p{margin-bottom:10px}
+    .instr-text ul{padding-left:18px;margin-bottom:10px}
+    .instr-text li{margin-bottom:6px}
+    .instr-level-badge{display:inline-block;padding:3px 12px;border-radius:20px;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700;margin-right:6px;margin-bottom:4px}
+    .instr-n1{background:rgba(18,42,94,.7);border:1px solid rgba(74,122,222,.4);color:#8AAEFF}
+    .instr-n2{background:rgba(14,48,24,.7);border:1px solid rgba(74,154,96,.4);color:#6EE7B7}
+    .instr-n3{background:rgba(60,16,0,.7);border:1px solid rgba(192,64,32,.4);color:#FCA5A5}
+    .instr-highlight{background:rgba(212,175,55,.08);border-left:3px solid rgba(212,175,55,.5);padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0}
+    .instr-consent-box{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.25);border-radius:10px;padding:14px;margin-top:8px}
+    .instr-consent-title{color:#6EE7B7;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;font-weight:700}
+    .instr-logo-btn{background:none;border:none;cursor:pointer;padding:0;display:inline-flex;align-items:center;-webkit-tap-highlight-color:transparent}
+    .instr-logo-btn:active{opacity:.7}
   </style>
 </head>
 <body>
@@ -370,7 +395,7 @@
   <!-- LOGIN -->
   <div id="screen-login" class="screen">
     <div class="login-box">
-      <img src="logo.png" class="logo-svg" alt="3ÉPAR"/>
+      <button class="instr-logo-btn" onclick="logoClick()"><img src="logo.png" class="logo-svg" alt="3ÉPAR"/></button>
       <div class="logo-tagline">Consentimento e Prazer</div>
       <div class="hr-gold" style="width:100%;margin-top:10px"></div>
       <div class="login-form">
@@ -392,7 +417,7 @@
       <div class="topbar-btns"><button class="icon-btn" onclick="goLogout()">Sair</button></div>
     </div>
     <div class="logo-block" style="margin-top:10px">
-      <img src="logo.png" class="logo-svg" alt="3ÉPAR"/>
+      <button class="instr-logo-btn" onclick="logoClick()"><img src="logo.png" class="logo-svg" alt="3ÉPAR"/></button>
       <div class="logo-tagline">Consentimento e Prazer</div>
     </div>
     <div class="hr-gold"></div>
@@ -439,6 +464,7 @@
       <div class="packs-label">Packs Disponíveis</div>
       <div id="packs-list"></div>
     </div>
+    <button class="joker-btn" style="color:rgba(212,175,55,.5);margin-top:2px" onclick="showScreen('screen-instructions')">📖 Como Jogar</button>
   </div>
 
   <!-- PLAYER SETUP -->
@@ -473,7 +499,7 @@
   <!-- GUEST JOIN -->
   <div id="screen-guest" class="screen">
     <div class="guest-box">
-      <img src="logo.png" style="width:min(62vw,230px);height:auto" alt="3ÉPAR"/>
+      <button class="instr-logo-btn" onclick="logoClick()"><img src="logo.png" style="width:min(62vw,230px);height:auto" alt="3ÉPAR"/></button>
       <div class="guest-title" id="guest-title">Você foi convidado!</div>
       <div class="guest-sub" id="guest-sub">Selecione o seu nome para entrar na partida como jogador.</div>
       <div class="guest-players" id="guest-players-list"></div>
@@ -544,6 +570,110 @@
     </div>
   </div>
 
+  <!-- INSTRUCTIONS -->
+  <div id="screen-instructions" class="screen">
+    <div class="instr-header">
+      <button class="icon-btn" onclick="showScreen('screen-menu');renderMenu()">← Voltar</button>
+      <div class="instr-title">Como Jogar</div>
+      <div style="width:60px"></div>
+    </div>
+    <div class="instr-body">
+
+      <div class="instr-section">
+        <div class="instr-section-title"><span>🃏</span> O que é o 3ÉPAR?</div>
+        <div class="instr-text">
+          <p>3ÉPAR é um jogo de cartas íntimo para casais ou grupos de amigos adultos. Ele combina perguntas ousadas, desafios sensoriais e momentos de conexão real — tudo com base no consentimento mútuo.</p>
+          <p>A cada rodada, uma carta é revelada. O jogador da vez responde ou cumpre o desafio. Simples assim.</p>
+        </div>
+      </div>
+
+      <div class="hr-gold"></div>
+
+      <div class="instr-section">
+        <div class="instr-section-title"><span>🔥</span> Os 3 Níveis</div>
+        <div class="instr-text">
+          <p><span class="instr-level-badge instr-n1">Nível 1 — Aquecimento</span><br>Perguntas leves e desafios divertidos para quebrar o gelo. Ideal para começar a noite e esquentar o clima.</p>
+          <p><span class="instr-level-badge instr-n2">Nível 2 — Ousadia</span><br>As perguntas ficam mais íntimas e os desafios mais ousados. É aqui que os segredos começam a aparecer.</p>
+          <p><span class="instr-level-badge instr-n3">Nível 3 — Proibido</span><br>Para adultos sem pudor. Desafios físicos, fantasias reveladas e muita ação. Só continue se todos estiverem dispostos.</p>
+          <div class="instr-highlight">Ao escolher <strong style="color:var(--gold)">Todos os Níveis</strong>, o jogo começa no Nível 1 e avança automaticamente até o Nível 3 — sem precisar reiniciar.</div>
+        </div>
+      </div>
+
+      <div class="hr-gold"></div>
+
+      <div class="instr-section">
+        <div class="instr-section-title"><span>▶️</span> Como Jogar</div>
+        <div class="instr-text">
+          <ul>
+            <li>Na tela inicial, escolha um nível (ou todos juntos).</li>
+            <li>Adicione os nomes dos jogadores que vão participar.</li>
+            <li>Toque em <strong style="color:var(--gold)">Começar Jogo</strong>.</li>
+            <li>A carta aparece virada para baixo. <strong style="color:var(--gold)">Toque na carta</strong> para revelá-la.</li>
+            <li>O jogador indicado responde ou cumpre o desafio.</li>
+            <li>Toque em <strong style="color:var(--gold)">Próxima →</strong> para avançar para a próxima carta.</li>
+            <li>A barra no topo indica de quem é a vez.</li>
+          </ul>
+          <p>Cada nível tem sua própria baralho de cartas embaralhado. A ordem é sempre aleatória.</p>
+        </div>
+      </div>
+
+      <div class="hr-gold"></div>
+
+      <div class="instr-section">
+        <div class="instr-section-title"><span>🃏</span> O Coringa</div>
+        <div class="instr-text">
+          <p>Em alguns momentos, uma carta <strong style="color:var(--gold)">Coringa</strong> aparece. Quem a recebe pode passar qualquer desafio ou pergunta para outro jogador de sua escolha — uma única vez.</p>
+          <p>O Coringa fica guardado na barra de jogadores e pode ser usado a qualquer momento durante o jogo.</p>
+        </div>
+      </div>
+
+      <div class="hr-gold"></div>
+
+      <div class="instr-section">
+        <div class="instr-section-title"><span>📱</span> Modo Multiplayer</div>
+        <div class="instr-text">
+          <p>Quer jogar com cada um no próprio celular? Na tela de jogadores, toque em <strong style="color:var(--gold)">🔗 Convidar — Link da Partida</strong>.</p>
+          <ul>
+            <li>Compartilhe o link gerado com os outros jogadores.</li>
+            <li>Cada um abre o link no celular e escolhe seu nome.</li>
+            <li>O anfitrião controla o baralho; os convidados veem tudo em tempo real.</li>
+            <li>Quando for sua vez, toque na carta para revelá-la.</li>
+          </ul>
+          <p>O link é válido por 1 hora. Após isso, uma nova partida precisa ser criada.</p>
+        </div>
+      </div>
+
+      <div class="hr-gold"></div>
+
+      <div class="instr-section">
+        <div class="instr-section-title"><span>✎</span> Cartas Personalizadas</div>
+        <div class="instr-text">
+          <p>Quer adicionar suas próprias cartas? Toque em <strong style="color:var(--gold)">Minhas Cartas Personalizadas</strong> no menu e crie perguntas e desafios exclusivos para o seu grupo.</p>
+          <p>Suas cartas aparecem misturadas às cartas padrão do nível escolhido.</p>
+        </div>
+      </div>
+
+      <div class="hr-gold"></div>
+
+      <div class="instr-section">
+        <div class="instr-section-title"><span>💚</span> Consentimento em Primeiro Lugar</div>
+        <div class="instr-consent-box">
+          <div class="instr-consent-title">Regra de Ouro</div>
+          <div class="instr-text">
+            <p>Nenhum desafio ou pergunta é obrigatório. Qualquer jogador pode pular qualquer carta, a qualquer momento, sem precisar explicar nada.</p>
+            <p>O 3ÉPAR foi criado para aproximar pessoas com respeito e leveza. Se alguém não estiver confortável, respeite — o jogo deve ser prazeroso para todos.</p>
+            <p style="color:#6EE7B7;font-weight:700">Consentimento não é opcional. É a base de tudo.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:24px">
+        <button class="btn btn-gold" onclick="showScreen('screen-menu');renderMenu()" style="min-width:180px">Começar a jogar →</button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- ADMIN -->
   <div id="screen-admin" class="screen">
     <div class="admin-header">
@@ -561,6 +691,7 @@
       <button class="atab" data-tab="default" onclick="adminTab('default')"><span class="atab-icon">🃏</span>Padrão</button>
       <button class="atab" data-tab="packs" onclick="adminTab('packs')"><span class="atab-icon">📦</span>Packs</button>
       <button class="atab" data-tab="users" onclick="adminTab('users')"><span class="atab-icon">👥</span>Usuários</button>
+      <button class="atab" data-tab="firebase" onclick="adminTab('firebase')"><span class="atab-icon">🔐</span>Regras</button>
     </div>
   </div>
 
@@ -687,7 +818,7 @@ function dbGet(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f
 function dbSet(k,v){localStorage.setItem(k,JSON.stringify(v));}
 
 // ── Caches em memória sincronizados com Firebase ──
-let _users=null, _progress=null, _customCards=null;
+let _users=null, _progress=null, _customCards=null, _extraDefault=null, _packs=null;
 
 const DEFAULT_USERS=[
   {id:1,login:'admin',senha:'D5m3ubn7!',tipo:'admin',ativo:true,nome:'Administrador'},
@@ -697,8 +828,8 @@ const DEFAULT_USERS=[
 // Leitura — usa cache Firebase; fallback localStorage
 function getUsers(){return _users!==null?_users:dbGet(SK.users,DEFAULT_USERS);}
 function getCustomCards(){return _customCards!==null?_customCards:dbGet(SK.customCards,[]);}
-function getExtraDefault(){return dbGet(SK.extraDefault,[]);}
-function getPacks(){return dbGet(SK.packs,[]);}
+function getExtraDefault(){return _extraDefault!==null?_extraDefault:dbGet(SK.extraDefault,[]);}
+function getPacks(){return _packs!==null?_packs:dbGet(SK.packs,[]);}
 function getProgress(uid){
   if(_progress&&_progress[uid])return _progress[uid];
   return dbGet(SK.progress,{})[uid]||{n1:true,n2:false,n3:false};
@@ -727,8 +858,30 @@ function saveCustomCards(c){
     else fbDb.ref('custom_cards').remove().catch(()=>{});
   }
 }
-function saveExtraDefault(c){dbSet(SK.extraDefault,c);}
-function savePacks(p){dbSet(SK.packs,p);}
+function saveExtraDefault(c){
+  _extraDefault=c; dbSet(SK.extraDefault,c);
+  if(fbDb){
+    let op;
+    if(c.length){const o={};c.forEach(x=>o[x.id]=x);op=fbDb.ref('extra_default').set(o);}
+    else op=fbDb.ref('extra_default').remove();
+    op.catch(err=>{
+      console.error('[3ÉPAR] Erro ao salvar extra_default no Firebase:',err);
+      alert('Atenção: alteração salva localmente, mas houve erro ao sincronizar com o servidor.\n\nVerifique se as regras do Firebase incluem o caminho "extra_default".\nAcesse a aba 🔐 Regras e aplique as regras recomendadas.');
+    });
+  }
+}
+function savePacks(p){
+  _packs=p; dbSet(SK.packs,p);
+  if(fbDb){
+    let op;
+    if(p.length){const o={};p.forEach(x=>o[x.id]=x);op=fbDb.ref('packs').set(o);}
+    else op=fbDb.ref('packs').remove();
+    op.catch(err=>{
+      console.error('[3ÉPAR] Erro ao salvar packs no Firebase:',err);
+      alert('Atenção: alteração salva localmente, mas houve erro ao sincronizar com o servidor.\n\nVerifique se as regras do Firebase incluem o caminho "packs".\nAcesse a aba 🔐 Regras e aplique as regras recomendadas.');
+    });
+  }
+}
 function setLevelDone(uid,lvl){
   if(!_progress)_progress={};
   if(!_progress[uid])_progress[uid]={n1:true,n2:false,n3:false};
@@ -771,6 +924,27 @@ async function initAllFromFirebase(){
     const cd=cs.val();
     _customCards=cd?Object.values(cd):[];
     fbDb.ref('custom_cards').on('value',s=>{const d=s.val();_customCards=d?Object.values(d):[];});
+
+    // Cartas padrão extras / overrides
+    try{
+      const es=await fbDb.ref('extra_default').once('value');
+      const ed=es.val();
+      _extraDefault=ed?Object.values(ed):[];
+      dbSet(SK.extraDefault,_extraDefault);
+      fbDb.ref('extra_default').on('value',s=>{const d=s.val();_extraDefault=d?Object.values(d):[];dbSet(SK.extraDefault,_extraDefault);});
+    }catch(e){console.warn('[3ÉPAR] extra_default sem permissão — aplique as regras Firebase na aba 🔐 Regras.',e.message);}
+
+    // Packs
+    try{
+      const kp=await fbDb.ref('packs').once('value');
+      const pd=kp.val();
+      _packs=pd?Object.values(pd):[];
+      dbSet(SK.packs,_packs);
+      fbDb.ref('packs').on('value',s=>{const d=s.val();_packs=d?Object.values(d):[];dbSet(SK.packs,_packs);});
+    }catch(e){console.warn('[3ÉPAR] packs sem permissão — aplique as regras Firebase na aba 🔐 Regras.',e.message);}
+
+    // Aplica regras recomendadas automaticamente se tiver secret salvo
+    autoApplyFirebaseRules().catch(()=>{});
 
   }catch(e){console.error('Erro ao carregar dados Firebase:',e);}
 }
@@ -851,8 +1025,18 @@ function seededShuffle(arr,seed){
 function shuffle(arr){return seededShuffle(arr,Math.floor(Math.random()*2147483647));}
 
 function getDefaultCards(nivel){
-  const extra=getExtraDefault().filter(c=>c.nivel===nivel&&!c.oculto);
-  return [...BASE_CARDS[nivel].map(c=>({...c,level:nivel,origem:'padrao'})),...extra.map(c=>({...c,level:nivel,origem:'padrao'}))];
+  const extra=getExtraDefault();
+  const overrides={};
+  extra.filter(c=>c.isBaseOverride&&c.nivel===nivel).forEach(c=>overrides[c.id]=c);
+  const baseCards=BASE_CARDS[nivel].map((c,i)=>{
+    const id='base-'+nivel+'-'+i;
+    const ov=overrides[id];
+    if(ov&&ov.oculto)return null;
+    if(ov)return{...c,...ov,id,level:nivel,origem:'padrao'};
+    return{...c,id,level:nivel,origem:'padrao'};
+  }).filter(Boolean);
+  const addedExtra=extra.filter(c=>c.nivel===nivel&&!c.oculto&&!c.isBaseOverride);
+  return[...baseCards,...addedExtra.map(c=>({...c,level:nivel,origem:'padrao'}))];
 }
 function getUserCards(nivel){
   if(!currentUser||!isVIP(currentUser))return[];
@@ -1515,6 +1699,24 @@ function goMenu(){
   renderMenu();showScreen('screen-menu');
 }
 
+function logoClick(){
+  const active=document.querySelector('.screen.active');
+  if(!active)return;
+  const id=active.id;
+  if(id==='screen-login'||id==='screen-menu')return;
+  if(id==='screen-game'){
+    openModal(`<div class="modal-title">⚠️ Sair da partida?</div>
+      <p style="font-size:13px;color:var(--txt2);line-height:1.7;margin-bottom:16px">Se voltar para a página inicial, a partida atual será perdida e você terá que recomeçar do início.</p>
+      <div class="modal-actions">
+        <button class="btn btn-danger btn-full" onclick="closeModal();goMenu()">Sim, sair da partida</button>
+      </div>
+      <button class="btn btn-outline btn-full" style="margin-top:8px" onclick="closeModal()">Continuar jogando</button>`);
+    return;
+  }
+  if(!currentUser){showScreen('screen-login');return;}
+  goMenu();
+}
+
 // ══ MY CARDS ══
 let editingCardId=null;
 function renderMyCards(){
@@ -1583,7 +1785,7 @@ function deleteMyCard(id){if(!confirm('Excluir?'))return;saveCustomCards(getCust
 let adminNivelFilter='n1';
 function adminTab(tab){
   document.querySelectorAll('.atab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
-  ({custom:renderAdminCustom,default:renderAdminDefault,packs:renderAdminPacks,users:renderAdminUsers})[tab]?.();
+  ({custom:renderAdminCustom,default:renderAdminDefault,packs:renderAdminPacks,users:renderAdminUsers,firebase:renderAdminFirebase})[tab]?.();
 }
 
 function renderAdminCustom(){
@@ -1615,33 +1817,50 @@ function promoteToDefault(id){
 
 function renderAdminDefault(){
   const extra=getExtraDefault();
+  const overrides={};
+  extra.filter(c=>c.isBaseOverride).forEach(c=>overrides[c.id]=c);
+  const mergeBase=(c,i,nivel)=>{
+    const id='base-'+nivel+'-'+i;
+    const ov=overrides[id];
+    return{...c,id,nivel,origem:'base',oculto:ov?!!ov.oculto:false,texto:ov?ov.texto:c.texto,tipo:ov?ov.tipo:c.tipo};
+  };
   const allByLevel={
-    n1:[...BASE_CARDS.n1.map((c,i)=>({...c,id:'base-n1-'+i,origem:'base'})),...extra.filter(c=>c.nivel==='n1')],
-    n2:[...BASE_CARDS.n2.map((c,i)=>({...c,id:'base-n2-'+i,origem:'base'})),...extra.filter(c=>c.nivel==='n2')],
-    n3:[...BASE_CARDS.n3.map((c,i)=>({...c,id:'base-n3-'+i,origem:'base'})),...extra.filter(c=>c.nivel==='n3')],
+    n1:[...BASE_CARDS.n1.map((c,i)=>mergeBase(c,i,'n1')),...extra.filter(c=>c.nivel==='n1'&&!c.isBaseOverride)],
+    n2:[...BASE_CARDS.n2.map((c,i)=>mergeBase(c,i,'n2')),...extra.filter(c=>c.nivel==='n2'&&!c.isBaseOverride)],
+    n3:[...BASE_CARDS.n3.map((c,i)=>mergeBase(c,i,'n3')),...extra.filter(c=>c.nivel==='n3'&&!c.isBaseOverride)],
   };
   const cards=allByLevel[adminNivelFilter]||[];
+  const fbWarning=fbDb?'':'<div style="margin-bottom:12px;padding:10px 12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;font-size:11px;color:#F87171;line-height:1.5">⚠️ Firebase não conectado. Edições e desativações de cartas base são salvas apenas localmente e não persistem entre sessões.<br>Conecte o Firebase e aplique as regras na aba 🔐 Regras.</div>';
   document.getElementById('admin-content').innerHTML=`
     <div class="section-title">Cartas Padrão</div>
+    ${fbWarning}
     <div class="nivel-tabs">${['n1','n2','n3'].map(l=>`<button class="nivel-tab ${adminNivelFilter===l?'active':''}" onclick="adminNivelFilter='${l}';renderAdminDefault()">Nível ${l.toUpperCase()}</button>`).join('')}</div>
     <button class="btn btn-gold btn-full" style="margin-bottom:14px" onclick="openAdminDefaultModal()">+ Nova Carta Padrão</button>
-    ${cards.map(c=>`<div class="default-card-row">
+    ${cards.map(c=>`<div class="default-card-row${c.oculto?' disabled':''}">
       <div class="default-card-info">
-        <div class="custom-card-tipo">${c.tipo}</div>
+        <div class="custom-card-tipo">${c.tipo}${c.origem==='base'?'<span style="font-size:9px;color:var(--txt2);margin-left:6px">base</span>':''}</div>
         <div style="font-size:13px;color:var(--txt);line-height:1.4">${c.texto}</div>
-        ${c.oculto?'<div style="font-size:10px;color:var(--danger);margin-top:4px">● Oculta</div>':''}
+        ${c.oculto?'<div style="font-size:10px;color:var(--danger);margin-top:4px">● Desativada</div>':''}
       </div>
       <div class="default-card-actions">
-        ${c.origem!=='base'?`<button class="btn btn-sm btn-outline" onclick="openAdminDefaultModal('${c.id}')">✎</button>
-        <button class="btn btn-sm btn-danger" onclick="toggleDefaultCard('${c.id}')">${c.oculto?'Mostrar':'Ocultar'}</button>`:'<span style="font-size:10px;color:var(--txt2)">Base</span>'}
+        <button class="btn btn-sm btn-outline" onclick="openAdminDefaultModal('${c.id}')">✎</button>
+        <button class="btn btn-sm ${c.oculto?'btn-success':'btn-danger'}" onclick="toggleDefaultCard('${c.id}')">${c.oculto?'Ativar':'Desativar'}</button>
       </div>
     </div>`).join('')}`;
 }
 
 function openAdminDefaultModal(id){
-  const card=id?getExtraDefault().find(c=>c.id===id):null;
+  let card=null;
+  if(id){
+    card=getExtraDefault().find(c=>c.id===id)||null;
+    if(!card&&id.startsWith('base-')){
+      const parts=id.split('-');const nivel=parts[1];const idx=parseInt(parts[2]);
+      const bc=BASE_CARDS[nivel]?.[idx];
+      if(bc)card={...bc,id,nivel,isBaseOverride:true};
+    }
+  }
   openModal(`<div class="modal-title">${id?'Editar':'Nova'} Carta Padrão</div>
-    <div class="field"><label>Nível</label><select id="ad-nivel">
+    <div class="field"><label>Nível</label><select id="ad-nivel" ${id?'disabled':''}>
       ${['n1','n2','n3'].map(l=>`<option value="${l}" ${card?.nivel===l?'selected':l===adminNivelFilter&&!card?'selected':''}>Nível ${l.toUpperCase()}</option>`).join('')}
     </select></div>
     <div class="field"><label>Tipo</label><select id="ad-tipo">
@@ -1658,11 +1877,31 @@ function saveAdminDefault(id){
   const nivel=document.getElementById('ad-nivel').value,tipo=document.getElementById('ad-tipo').value,texto=document.getElementById('ad-texto').value.trim();
   if(!texto){alert('Digite o texto.');return;}
   const extra=getExtraDefault();
-  if(id){const i=extra.findIndex(c=>c.id===id);if(i>-1){extra[i].nivel=nivel;extra[i].tipo=tipo;extra[i].texto=texto;}}
-  else extra.push({id:'d'+Date.now(),nivel,tipo,texto,oculto:false,criadoEm:Date.now()});
+  if(id){
+    const i=extra.findIndex(c=>c.id===id);
+    if(i>-1){extra[i].tipo=tipo;extra[i].texto=texto;}
+    else{
+      const isBase=id.startsWith('base-');
+      const parts=isBase?id.split('-'):[];
+      const bcNivel=isBase?parts[1]:nivel;
+      extra.push({id,nivel:bcNivel,tipo,texto,oculto:false,criadoEm:Date.now(),isBaseOverride:isBase});
+    }
+  }else{
+    extra.push({id:'d'+Date.now(),nivel,tipo,texto,oculto:false,criadoEm:Date.now()});
+  }
   saveExtraDefault(extra);closeModal();renderAdminDefault();
 }
-function toggleDefaultCard(id){const extra=getExtraDefault();const i=extra.findIndex(c=>c.id===id);if(i>-1){extra[i].oculto=!extra[i].oculto;saveExtraDefault(extra);}renderAdminDefault();}
+function toggleDefaultCard(id){
+  const extra=getExtraDefault();
+  const i=extra.findIndex(c=>c.id===id);
+  if(i>-1){extra[i].oculto=!extra[i].oculto;}
+  else if(id.startsWith('base-')){
+    const parts=id.split('-');const nivel=parts[1];const idx=parseInt(parts[2]);
+    const bc=BASE_CARDS[nivel]?.[idx];
+    if(bc)extra.push({...bc,id,nivel,oculto:true,criadoEm:Date.now(),isBaseOverride:true});
+  }
+  saveExtraDefault(extra);renderAdminDefault();
+}
 
 function renderAdminPacks(){
   const packs=getPacks();
@@ -1778,6 +2017,114 @@ function saveUser(id){
 function setUserType(id,tipo){const users=getUsers();const i=users.findIndex(u=>u.id===id);if(i>-1){users[i].tipo=tipo;saveUsers(users);}renderAdminUsers();}
 function toggleUserBlock(id){const users=getUsers();const i=users.findIndex(u=>u.id===id);if(i>-1){users[i].ativo=!users[i].ativo;saveUsers(users);}renderAdminUsers();}
 function togglePack20(id){const users=getUsers();const i=users.findIndex(u=>u.id===id);if(i>-1){users[i].pack20=!users[i].pack20;saveUsers(users);}renderAdminUsers();}
+
+// ══ FIREBASE RULES ══
+const FB_RULES_SK='3epar_fb_secret';
+const RECOMMENDED_RULES={
+  rules:{
+    users:{'.read':true,'.write':true},
+    custom_cards:{'.read':true,'.write':true},
+    extra_default:{'.read':true,'.write':true},
+    packs:{'.read':true,'.write':true},
+    progress:{'.read':true,'.write':true},
+    games:{'.read':true,'.write':true}
+  }
+};
+async function autoApplyFirebaseRules(){
+  const secret=localStorage.getItem(FB_RULES_SK);
+  if(!secret||!fbDb)return;
+  try{
+    const url=`${FB_CONFIG.databaseURL}/.settings/rules.json?auth=${encodeURIComponent(secret)}`;
+    const res=await fetch(url);
+    if(!res.ok)return;
+    const current=await res.json();
+    const required=['users','custom_cards','extra_default','packs','progress','games'];
+    const existing=current?.rules||{};
+    const needsUpdate=required.some(k=>!existing[k]);
+    if(needsUpdate){
+      await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(RECOMMENDED_RULES)});
+      console.log('[3ÉPAR] Regras Firebase atualizadas automaticamente.');
+    }
+  }catch(e){
+    console.warn('[3ÉPAR] Verificação automática de regras falhou:',e);
+  }
+}
+
+function renderAdminFirebase(){
+  const secret=localStorage.getItem(FB_RULES_SK)||'';
+  document.getElementById('admin-content').innerHTML=`
+    <div class="section-title">Regras do Firebase</div>
+    <div class="section-subtitle">Gerencie as regras de segurança do Realtime Database.</div>
+    <div class="field" style="margin-top:12px">
+      <label>Database Secret</label>
+      <input type="password" id="fb-secret" value="${secret}" placeholder="Cole o segredo do Firebase aqui" autocomplete="off"/>
+    </div>
+    <div style="font-size:11px;color:var(--txt2);margin:-10px 0 14px">
+      Firebase Console → Project Settings → Service accounts → Database secrets
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn btn-outline btn-sm" style="flex:1" onclick="fbLoadRules()">↓ Carregar Regras Atuais</button>
+      <button class="btn btn-outline btn-sm" onclick="fbCopyRules()">⎘ Copiar</button>
+      <button class="btn btn-outline btn-sm" onclick="fbResetRules()">↺ Padrão</button>
+    </div>
+    <div class="field">
+      <label>Regras (JSON)</label>
+      <textarea id="fb-rules" style="min-height:260px;font-family:monospace;font-size:12px;line-height:1.5">${JSON.stringify(RECOMMENDED_RULES,null,2)}</textarea>
+    </div>
+    <div id="fb-rules-msg" style="font-size:12px;text-align:center;min-height:18px;margin-bottom:8px"></div>
+    <button class="btn btn-gold btn-full" onclick="fbSaveRules()">↑ Aplicar Regras no Firebase</button>
+    <div style="margin-top:14px;padding:12px;background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.2);border-radius:8px">
+      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-d);margin-bottom:6px;font-weight:700">Atenção</div>
+      <div style="font-size:11px;color:var(--txt2);line-height:1.6">
+        O Database Secret concede acesso total ao banco. Não o compartilhe.<br>
+        Após aplicar as regras, remova o secret deste campo.
+      </div>
+    </div>`;
+}
+async function fbLoadRules(){
+  const secret=document.getElementById('fb-secret').value.trim();
+  if(!secret){fbMsg('Informe o Database Secret.',false);return;}
+  localStorage.setItem(FB_RULES_SK,secret);
+  fbMsg('Carregando…',null);
+  try{
+    const res=await fetch(`${FB_CONFIG.databaseURL}/.settings/rules.json?auth=${encodeURIComponent(secret)}`);
+    if(!res.ok)throw new Error(`${res.status} ${res.statusText}`);
+    const data=await res.json();
+    document.getElementById('fb-rules').value=JSON.stringify(data,null,2);
+    fbMsg('Regras carregadas com sucesso!',true);
+  }catch(e){fbMsg('Erro: '+e.message,false);}
+}
+async function fbSaveRules(){
+  const secret=document.getElementById('fb-secret').value.trim();
+  const txt=document.getElementById('fb-rules').value.trim();
+  if(!secret){fbMsg('Informe o Database Secret.',false);return;}
+  let parsed;
+  try{parsed=JSON.parse(txt);}catch(e){fbMsg('JSON inválido: '+e.message,false);return;}
+  if(!confirm('Aplicar essas regras no Firebase?\nEsta ação altera as permissões do banco de dados.'))return;
+  localStorage.setItem(FB_RULES_SK,secret);
+  fbMsg('Aplicando…',null);
+  try{
+    const res=await fetch(`${FB_CONFIG.databaseURL}/.settings/rules.json?auth=${encodeURIComponent(secret)}`,{
+      method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(parsed)
+    });
+    if(!res.ok)throw new Error(`${res.status} ${res.statusText}`);
+    fbMsg('Regras aplicadas com sucesso!',true);
+  }catch(e){fbMsg('Erro: '+e.message,false);}
+}
+function fbCopyRules(){
+  const txt=document.getElementById('fb-rules')?.value||'';
+  navigator.clipboard.writeText(txt).then(()=>fbMsg('Copiado!',true)).catch(()=>fbMsg('Erro ao copiar.',false));
+}
+function fbResetRules(){
+  document.getElementById('fb-rules').value=JSON.stringify(RECOMMENDED_RULES,null,2);
+  fbMsg('Regras padrão restauradas.',null);
+}
+function fbMsg(msg,ok){
+  const el=document.getElementById('fb-rules-msg');
+  if(!el)return;
+  el.textContent=msg;
+  el.style.color=ok===true?'var(--success)':ok===false?'var(--danger)':'var(--txt2)';
+}
 
 // ══ MODAL ══
 function openModal(html){document.getElementById('modal-box').innerHTML=html;document.getElementById('modal-overlay').classList.remove('hidden');}
