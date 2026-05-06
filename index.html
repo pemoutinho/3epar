@@ -972,6 +972,7 @@ function setLevelDone(uid,lvl){
 }
 
 function isVIP(user){return user&&(user.tipo==='vip'||user.tipo==='admin');}
+function isPaid(user){return user&&(user.tipo==='vip'||user.tipo==='promo'||user.tipo==='admin');}
 
 // ── Inicialização Firebase: carrega todos os dados do usuário ──
 async function initAllFromFirebase(){
@@ -1446,6 +1447,7 @@ function startGame(m){
 // ══ MENU ══
 function tryLevel(lvl){
   if(!currentUser)return;
+  if(isPaid(currentUser)){openPlayerSetup(lvl);return;}
   const prog=getProgress(currentUser.id);
   if(!prog[lvl]){
     const prev={n2:'Nível 1',n3:'Nível 2'};
@@ -1482,12 +1484,13 @@ function renderMenu(){
     sub.textContent='20 cartas exclusivas para intensificar o jogo';
   }
 
-  // Level locks
+  // Level locks — usuários pagos têm acesso livre a todos os níveis
   const prog=getProgress(currentUser.id);
   ['n2','n3'].forEach(l=>{
     const btn=document.getElementById('btn-'+l);
     const lock=document.getElementById('lock-'+l);
-    if(prog[l]){btn.classList.remove('locked');if(lock)lock.style.display='none';}
+    const unlocked=isPaid(currentUser)||prog[l];
+    if(unlocked){btn.classList.remove('locked');if(lock)lock.style.display='none';}
     else{btn.classList.add('locked');if(lock)lock.style.display='block';}
   });
   // Packs
