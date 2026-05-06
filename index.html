@@ -2483,7 +2483,7 @@ async function _assinarCartao(tipo){
     const res=await fetch(`${API_BASE}/api/subscription`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({planKey,userId:currentUser.id})
+      body:JSON.stringify({planKey,userId:currentUser.id,payerEmail:currentUser.email||''})
     });
     const data=await res.json();
     if(data.url)window.location.href=data.url;
