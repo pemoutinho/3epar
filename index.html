@@ -1055,10 +1055,10 @@ function startFreeTrial(){
   gamePlayers=[{name:'Jogador 1',joker:false},{name:'Jogador 2',joker:false}];
   currentPlayerIdx=0;
   jokersHeld=[];
-  deck=[...FREE_TRIAL_CARDS];
+  deck=FREE_TRIAL_CARDS.filter(c=>c.nivel==='n1');
   current=0;isFlipped=false;mode='n1';
   document.getElementById('guest-banner').style.display='none';
-  document.getElementById('screen-game').style.background='#1E0800';
+  document.getElementById('screen-game').style.background='#0B1A3E';
   showScreen('screen-game');
   renderBack();renderFront(deck[current]);updateGameUI();
   document.getElementById('card3d').classList.remove('flipped');
@@ -1704,7 +1704,7 @@ function nextCard(){
   }
   current++;
   if(current>=deck.length){
-    if(freeTrialMode){showScreen('screen-plans');renderPlansScreen();return;}
+    if(freeTrialMode){const nextLvl=NEXT_LEVEL[mode];if(nextLvl){advanceToFreeTrialLevel(nextLvl);return;}showScreen('screen-plans');renderPlansScreen();return;}
     const nextLvl=NEXT_LEVEL[mode];
     if(nextLvl){advanceToLevel(nextLvl);return;}
     if(gameRef)gameRef.update({gameOver:true});
@@ -1746,6 +1746,23 @@ function advanceToLevel(nextMode){
     document.getElementById('sortear-bar').style.display='none';
     triggerCardAnim();
     pushGameState();
+  });
+}
+
+function advanceToFreeTrialLevel(nextMode){
+  mode=nextMode;
+  deck=FREE_TRIAL_CARDS.filter(c=>c.nivel===nextMode);
+  current=0;isFlipped=false;
+  const cfg=getCfg(nextMode);
+  showLevelTransitionOverlay(nextMode,()=>{
+    document.getElementById('screen-game').style.background=cfg.bg;
+    const c=document.getElementById('card3d');
+    c.style.transition='none';c.classList.remove('flipped');void c.offsetWidth;c.style.transition='';
+    renderBack();renderFront(deck[0]);updateGameUI();
+    document.getElementById('tap-hint').style.opacity='1';
+    resetSortearChip();
+    document.getElementById('sortear-bar').style.display='none';
+    triggerCardAnim();
   });
 }
 
