@@ -2453,16 +2453,32 @@ function renderPacksStore(){
     </div>`).join('')+'<div style="font-size:10px;color:var(--txt2);text-align:center;margin-top:10px">Compra única — acesso permanente</div>';
 }
 
-async function assinarPlano(tipo){
+function assinarPlano(tipo){
   if(!currentUser||currentUser.tipo==='guest'||freeTrialMode){
     window._pendingPlan=tipo;
     showScreen('screen-cadastro');
     document.getElementById('cad-err').textContent='';
     return;
   }
+  const periodo=_planPeriod;
+  const diasLabel=periodo==='anual'?'365 dias':'30 dias';
+  const nomeLabel=tipo.toUpperCase()+' '+(periodo==='anual'?'Anual':'Mensal');
+  openModal(`
+    <div class="modal-title" style="margin-bottom:6px">Forma de Pagamento</div>
+    <div style="font-size:12px;color:var(--txt2);text-align:center;margin-bottom:20px">Plano <strong style="color:var(--gold)">${nomeLabel}</strong></div>
+    <button onclick="closeModal();_assinarCartao('${tipo}')" class="btn btn-outline btn-full" style="border-color:var(--gold);color:var(--gold);margin-bottom:10px;display:flex;flex-direction:column;align-items:center;gap:2px;height:auto;padding:12px">
+      <span style="font-size:15px">💳 Cartão de Crédito</span>
+      <span style="font-size:10px;color:var(--txt2);font-weight:400">Assinatura recorrente — cancele quando quiser</span>
+    </button>
+    <button onclick="closeModal();_assinarPix('${tipo}')" class="btn btn-gold btn-full" style="display:flex;flex-direction:column;align-items:center;gap:2px;height:auto;padding:12px">
+      <span style="font-size:15px">🟢 PIX</span>
+      <span style="font-size:10px;color:rgba(26,10,0,.7);font-weight:400">Acesso por ${diasLabel} — renovação manual</span>
+    </button>
+  `);
+}
+
+async function _assinarCartao(tipo){
   const planKey=`${tipo}_${_planPeriod}`;
-  const btn=event.target;
-  btn.disabled=true;btn.textContent='Aguarde...';
   try{
     const res=await fetch(`${API_BASE}/api/subscription`,{
       method:'POST',
@@ -2474,7 +2490,22 @@ async function assinarPlano(tipo){
     else throw new Error(data.error||'Erro desconhecido');
   }catch(e){
     alert('Erro ao iniciar assinatura: '+e.message);
-    btn.disabled=false;btn.textContent=tipo==='vip'?'Assinar VIP':'Assinar PROMO';
+  }
+}
+
+async function _assinarPix(tipo){
+  const planKey=`${tipo}_${_planPeriod}`;
+  try{
+    const res=await fetch(`${API_BASE}/api/pix-plan`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({planKey,userId:currentUser.id})
+    });
+    const data=await res.json();
+    if(data.url)window.location.href=data.url;
+    else throw new Error(data.error||'Erro desconhecido');
+  }catch(e){
+    alert('Erro ao gerar PIX: '+e.message);
   }
 }
 
