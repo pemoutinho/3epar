@@ -404,6 +404,9 @@
         <div class="err-msg" id="login-err"></div>
         <button class="btn btn-gold btn-full" style="margin-top:6px" onclick="doLogin()">Entrar</button>
       </div>
+      <div class="hr-gold" style="width:100%;margin-top:16px;margin-bottom:16px"></div>
+      <button class="btn btn-full" style="background:transparent;border:1.5px solid rgba(212,175,55,.5);color:rgba(212,175,55,.8);letter-spacing:2px;font-size:13px" onclick="startFreeTrial()">TESTE GRÁTIS</button>
+      <div style="color:rgba(255,255,255,.3);font-size:11px;margin-top:8px;text-align:center">6 cartas sem cadastro</div>
     </div>
   </div>
 
@@ -511,7 +514,7 @@
   <!-- PLANS -->
   <div id="screen-plans" class="screen" style="background:#06091A;overflow-y:auto;padding:0">
     <div style="padding:16px 16px 0;display:flex;align-items:center;gap:10px">
-      <button class="icon-btn" onclick="showScreen('screen-menu');renderMenu()">← Voltar</button>
+      <button class="icon-btn" onclick="freeTrialMode?goLogout():(showScreen('screen-menu'),renderMenu())">← Voltar</button>
       <div style="font-family:'Playfair Display',serif;font-size:16px;color:var(--gold);letter-spacing:2px">Planos</div>
     </div>
     <div style="padding:16px">
@@ -1044,7 +1047,27 @@ function doLogin(){
   else{renderMenu();showScreen('screen-menu');}
 }
 
+function startFreeTrial(){
+  freeTrialMode=true;
+  currentUser=null;
+  isHost=true;
+  gameRef=null;
+  gamePlayers=[{name:'Jogador 1',joker:false},{name:'Jogador 2',joker:false}];
+  currentPlayerIdx=0;
+  jokersHeld=[];
+  deck=[...FREE_TRIAL_CARDS];
+  current=0;isFlipped=false;mode='n1';
+  document.getElementById('guest-banner').style.display='none';
+  document.getElementById('screen-game').style.background='#1E0800';
+  showScreen('screen-game');
+  renderBack();renderFront(deck[current]);updateGameUI();
+  document.getElementById('card3d').classList.remove('flipped');
+  document.getElementById('tap-hint').style.opacity='1';
+  resetSortearChip();triggerCardAnim();
+}
+
 function goLogout(){
+  freeTrialMode=false;
   currentUser=null;localStorage.removeItem(SK.session);
   document.getElementById('login-input').value='';
   document.getElementById('senha-input').value='';
@@ -1096,6 +1119,16 @@ let isHost=false,myPlayerName='',_remoteCard=null,_remoteTotalCards=0;
 let _guestFlipLock=false,_guestFlipCardIdx=-1,_remoteCurrent=0;
 let _levelTransitioning=false;
 const NEXT_LEVEL={n1:'n2',n2:'n3'};
+
+const FREE_TRIAL_CARDS=[
+  {id:'ft1',nivel:'n1',tipo:'Pergunta',texto:'Qual sua posição preferida?'},
+  {id:'ft2',nivel:'n1',tipo:'Pergunta',texto:'Qual parte do seu corpo te dá mais prazer?'},
+  {id:'ft3',nivel:'n1',tipo:'Desafio',texto:'Escolha alguém para tirar uma peça de roupa.'},
+  {id:'ft4',nivel:'n2',tipo:'Desafio',texto:'Fale o nome de 5 posições sexuais em 30 segundos, se errar, tire uma peça de roupa.'},
+  {id:'ft5',nivel:'n2',tipo:'Pergunta',texto:'Como você chega ao orgasmo de forma mais rápida?'},
+  {id:'ft6',nivel:'n3',tipo:'Desafio',texto:'Chupe o jogador sorteado por 10 seg.'},
+];
+let freeTrialMode=false;
 
 function seededShuffle(arr,seed){
   const a=[...arr];let s=seed>>>0;
@@ -1447,7 +1480,6 @@ function startGame(m){
 // ══ MENU ══
 function tryLevel(lvl){
   if(!currentUser)return;
-  if(isPaid(currentUser)){openPlayerSetup(lvl);return;}
   const prog=getProgress(currentUser.id);
   if(!prog[lvl]){
     const prev={n2:'Nível 1',n3:'Nível 2'};
@@ -1489,7 +1521,7 @@ function renderMenu(){
   ['n2','n3'].forEach(l=>{
     const btn=document.getElementById('btn-'+l);
     const lock=document.getElementById('lock-'+l);
-    const unlocked=isPaid(currentUser)||prog[l];
+    const unlocked=prog[l];
     if(unlocked){btn.classList.remove('locked');if(lock)lock.style.display='none';}
     else{btn.classList.add('locked');if(lock)lock.style.display='block';}
   });
@@ -1672,6 +1704,7 @@ function nextCard(){
   }
   current++;
   if(current>=deck.length){
+    if(freeTrialMode){showScreen('screen-plans');renderPlansScreen();return;}
     const nextLvl=NEXT_LEVEL[mode];
     if(nextLvl){advanceToLevel(nextLvl);return;}
     if(gameRef)gameRef.update({gameOver:true});
@@ -1784,6 +1817,7 @@ function goMenu(){
   _levelTransitioning=false;
   const ov=document.getElementById('level-up-overlay');if(ov)ov.remove();
   isHost=false;document.getElementById('guest-banner').style.display='none';
+  if(freeTrialMode){freeTrialMode=false;showScreen('screen-login');return;}
   renderMenu();showScreen('screen-menu');
 }
 
